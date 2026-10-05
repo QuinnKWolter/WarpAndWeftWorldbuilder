@@ -290,13 +290,20 @@
       </div>
       <div class="workspace-tools">
         <span class="save-indicator" class:save-error={ws.saveState === 'error'} role="status"
-          >{#if ws.saveState === 'saved'}<Check size={13} />{/if}{ws.saveState === 'saved'
-            ? 'All changes saved'
-            : ws.saveState === 'error'
-              ? 'Save needs attention'
-              : ws.saveState === 'saving'
-                ? 'Saving…'
-                : 'Unsaved changes'}</span
+          >{#if ws.saveState === 'saved'}<Check
+              size={13}
+            />{:else if ws.saveState === 'error'}<TriangleAlert size={13} />{:else}<span
+              class="saving-dot"
+              aria-hidden="true"
+            ></span>{/if}<span class="save-label"
+            >{ws.saveState === 'saved'
+              ? 'All changes saved'
+              : ws.saveState === 'error'
+                ? 'Save needs attention'
+                : ws.saveState === 'saving'
+                  ? 'Saving…'
+                  : 'Unsaved changes'}</span
+          ></span
         ><button
           class="search-button"
           aria-label="Open command palette"

@@ -40,7 +40,7 @@
           b.documents.push(document);
         }
       },
-      'Prose saved',
+      'Prose updated',
       false
     );
   }

@@ -604,6 +604,12 @@ summary::-webkit-details-marker {
 .save-error {
   color: var(--danger);
 }
+.saving-dot {
+  width: 8px;
+  height: 8px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
 .search-button {
   gap: 9px;
   padding: 7px 9px;
@@ -1015,6 +1021,12 @@ summary::-webkit-details-marker {
 .semantic-edge-label:hover {
   border-color: var(--edge);
   background: var(--surface);
+}
+.svelte-flow {
+  --xy-edge-label-background-color: transparent;
+  --xy-edge-label-color: var(--ink);
+  --xy-attribution-background-color: var(--surface);
+  --xy-attribution-color: var(--muted);
 }
 .svelte-flow__handle {
   width: 7px !important;
@@ -1740,8 +1752,13 @@ dialog h2 {
     width: 272px;
     min-width: 272px;
   }
-  .save-indicator {
-    display: none;
+  .save-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 @media (max-width: 999px) {

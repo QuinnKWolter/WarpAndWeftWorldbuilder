@@ -283,4 +283,6 @@ test('semantic links, event steps and placeholder merges remain editable and und
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('button', { name: 'Leave focus writing' })).toBeVisible();
   await expect(page.getByRole('complementary', { name: 'Story inspector' })).toHaveCount(0);
+  await page.getByRole('textbox', { name: 'Scene prose' }).fill('A price remembered on a phone.');
+  await saved(page);
 });
