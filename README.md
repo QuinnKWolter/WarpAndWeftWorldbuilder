@@ -6,18 +6,20 @@ The guiding idea: **a story is a graph whose state changes through events.** Rea
 
 ![Storygraph workspace](static/screenshots/workspace.png)
 
-[Dark workspace](static/screenshots/workspace-dark.png) · [Phone writing view](static/screenshots/mobile-writing.png)
+[Dark workspace](static/screenshots/workspace-dark.png) · [Phone writing view](static/screenshots/mobile-writing.png) · [Bulk entity preview](static/screenshots/bulk-entities-dark.png)
 
 ## What you can do
 
 - Create, rename, duplicate, import, and delete story projects.
 - Build world entities with multiple facets: people, places, objects, secrets, factions, and your own categories.
+- Bulk add up to 500 entities with a preview, duplicate skipping, and one-step undo.
 - Nest acts, scenes, conversations, flashbacks, beats, and notes to any depth.
 - Insert scenes into connections; reorder in the outline without changing story timestamps.
 - Explore narrative, world, relationship, plot-thread, and chronology lenses.
 - Move through labeled story points to inspect changing relationships, knowledge, possessions, location, and custom properties.
 - Record scene participants, events, requirements, world changes, and before/after state diffs.
 - Follow overlapping threads, capture unplaced ideas, and resolve placeholders.
+- Collapse the entities and inspector panes to make space, with quiet animations that respect reduced-motion settings.
 - Write rich prose with autosave, local recovery drafts, word counts, basic formatting, and a focused writing view.
 - Search scenes, entities, events, threads, notes, and prose; use Ctrl/⌘ K to navigate or run commands.
 - Inspect deterministic continuity observations, including required knowledge/possession and possible delayed reveals.

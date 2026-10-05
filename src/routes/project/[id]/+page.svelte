@@ -37,6 +37,8 @@
   import { exportProject, download } from '#lib/application/files';
   import { product } from '#lib/product';
   import Shelf from '#lib/components/Shelf.svelte';
+  import BulkEntitiesDialog from '#lib/components/BulkEntitiesDialog.svelte';
+  import { panelMotion } from '#lib/application/motion';
   import GraphCanvas from '#lib/components/GraphCanvas.svelte';
   import Inspector from '#lib/components/Inspector.svelte';
   import Timeline from '#lib/components/Timeline.svelte';
@@ -54,6 +56,7 @@
   let issues = $state(false);
   let settings = $state(false);
   let deleteDialog = $state(false);
+  let bulkEntities = $state(false);
   let create = $state<{
     kind: CreateKind;
     beforeId?: string | null;
@@ -173,6 +176,7 @@
       void ws.flush();
       ws.message = 'Your story is saved automatically.';
     }
+    if (e.target instanceof Element && e.target.closest('dialog')) return;
     if (!input && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
       e.preventDefault();
       if (e.shiftKey) ws.redo();
@@ -340,19 +344,24 @@
         >
       </div>{/if}
     <div class="workspace-middle">
-      {#if showShelf && !focused}<div class="shelf-container">
+      {#if showShelf && !focused}<div
+          class="shelf-container"
+          transition:panelMotion={{ side: -1 }}
+          inert={!showShelf || focused}
+        >
           {#if window.innerWidth < 1000}<button
               class="drawer-close icon-button"
-              aria-label="Close story shelf"
+              aria-label="Close entities panel"
               onclick={() => (showShelf = false)}><X size={18} /></button
-            >{/if}<Shelf {ws} {oncreate} />
+            >{/if}<Shelf {ws} {oncreate} onbulkadd={() => (bulkEntities = true)} />
         </div>{/if}
       <main class="canvas-column">
         <div class="canvas-toolbar">
           <div class="lens-controls">
             <button
               class="icon-button"
-              aria-label="Toggle story shelf"
+              aria-label="Toggle entities panel"
+              aria-expanded={showShelf}
               onclick={() => (showShelf = !showShelf)}><PanelLeft size={17} /></button
             ><span class="toolbar-divider"></span><Layers size={16} /><select
               aria-label="Graph lens"
@@ -392,6 +401,7 @@
             ><button
               class="icon-button"
               aria-label="Toggle inspector"
+              aria-expanded={showInspector}
               onclick={() => (showInspector = !showInspector)}><PanelRight size={17} /></button
             >
           </div>
@@ -466,13 +476,19 @@
               }}
             />{/key}{/if}
       </main>
-      {#if showInspector && !focused}<Inspector
-          {ws}
-          {oncreate}
-          onwrite={write}
-          ondelete={() => (deleteDialog = true)}
-          onclose={() => (showInspector = false)}
-        />{/if}
+      {#if showInspector && !focused}<div
+          class="inspector-container"
+          transition:panelMotion={{ side: 1 }}
+          inert={!showInspector || focused}
+        >
+          <Inspector
+            {ws}
+            {oncreate}
+            onwrite={write}
+            ondelete={() => (deleteDialog = true)}
+            onclose={() => (showInspector = false)}
+          />
+        </div>{/if}
     </div>
     {#if !focused}<Timeline {ws} />{/if}
     <footer class="workspace-status">
@@ -490,10 +506,12 @@
     </footer>
   </div>
   {#if create}<CreateDialog {ws} {...create} onclose={() => (create = null)} />{/if}
+  {#if bulkEntities}<BulkEntitiesDialog {ws} onclose={() => (bulkEntities = false)} />{/if}
   {#if command}<CommandPalette
       {ws}
       onclose={() => (command = false)}
       {oncreate}
+      onbulkadd={() => (bulkEntities = true)}
       onissues={() => (issues = true)}
       onfit={() => canvasVersion++}
     />{/if}
@@ -513,8 +531,12 @@
             onclick={() => {
               const selection = ws.selection!;
               ws.mutate((b) => removeObject(b, selection), 'Object removed. Undo is available.');
-              if (writingId === selection.id) writingId = null;
-              if (ws.parentId === selection.id) ws.parentId = null;
+              if (writingId && !ws.bundle?.units.some((u) => u.id === writingId)) {
+                writingId = null;
+                focused = false;
+              }
+              if (ws.parentId && !ws.bundle?.units.some((u) => u.id === ws.parentId))
+                ws.parentId = null;
               ws.selection = null;
               deleteDialog = false;
             }}>Delete & keep undo</button

@@ -13,7 +13,11 @@
   import type { Workspace } from '#lib/application/workspace.svelte';
   import type { CreateKind } from './CreateDialog.svelte';
   import { narrativeOrder, breadcrumbs, placeUnit } from '#lib/domain/order';
-  let { ws, oncreate }: { ws: Workspace; oncreate: (kind: CreateKind) => void } = $props();
+  let {
+    ws,
+    oncreate,
+    onbulkadd
+  }: { ws: Workspace; oncreate: (kind: CreateKind) => void; onbulkadd: () => void } = $props();
   let tab = $state('world');
   let query = $state('');
   let sort = $state('name');
@@ -49,9 +53,9 @@
   }
 </script>
 
-<aside class="shelf" aria-label="Story shelf">
+<aside class="shelf" aria-label="Entities and outline">
   <header class="panel-header">
-    <span class="eyebrow">YOUR STORY SHELF</span><button
+    <span class="eyebrow">WORLD ENTITIES</span><button
       class="icon-button"
       aria-label="Create world entity"
       onclick={() => oncreate('entity')}><Plus size={17} /></button
@@ -59,24 +63,26 @@
   </header>
   <div class="shelf-search">
     <Search size={15} /><input
-      aria-label="Search story shelf"
+      aria-label="Search entities and outline"
       bind:value={query}
-      placeholder="Find a little thing…"
+      placeholder="Search names, notes, facets…"
     />
   </div>
-  <div class="shelf-tabs" role="tablist" aria-label="Shelf sections">
+  <div class="shelf-tabs" role="tablist" aria-label="Entities and outline sections">
     {#each ['world', 'outline', 'ideas'] as t (t)}<button
         role="tab"
         aria-selected={tab === t}
         class:active={tab === t}
-        onclick={() => (tab = t)}>{t}</button
+        onclick={() => (tab = t)}>{t === 'world' ? 'Entities' : t}</button
       >{/each}
   </div>
   <div class="shelf-scroll">
     {#if tab === 'world'}
-      <select class="shelf-sort small" aria-label="Sort world shelf" bind:value={sort}
-        ><option value="name">A–Z</option><option value="facet">By facet</option></select
-      >
+      <div class="entity-list-tools">
+        <select class="shelf-sort small" aria-label="Sort entities" bind:value={sort}
+          ><option value="name">A–Z</option><option value="facet">By facet</option></select
+        ><button class="text-button" onclick={onbulkadd}><Plus size={13} /> Bulk add</button>
+      </div>
       {#each [{ facet: 'character', label: 'Characters', icon: UserRound }, { facet: 'location', label: 'Places', icon: MapPin }, { facet: 'item', label: 'Objects', icon: Diamond }, { facet: 'other', label: 'The rest of the world', icon: Layers }] as group (group.facet)}
         {@const items = entities.filter((e) =>
           group.facet === 'other'

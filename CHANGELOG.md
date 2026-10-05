@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Rename the left workspace pane to World entities, with Entities, Outline, and Ideas tabs.
+- Bulk add up to 500 entities from one-per-line names or `Name | facets | summary`, with preview, line-specific validation, duplicate skipping, autosave, and one-step undo/redo. Also available through the command palette.
+- Smooth desktop pane collapse/expansion, phone drawer slides, dialog entrances, menus, writing-panel entrances, and control/card feedback, respecting reduced-motion preferences.
+- Center dialogs within the viewport on desktop and phones.
+- Apply light/dark semantic colors to native select menus, including graph lenses, entity sorting, and timeline controls.
+- Fix moment deletion previews crashing on Svelte reactive proxies; use JSON-safe snapshots for deletion impact, project cloning, and history restoration.
+- Prevent workspace deletion/arrow shortcuts from acting behind an open dialog; clear writing or nesting context when its containing moment is deleted.
+- Add proxy cloning and batch parser coverage plus browser regressions for keyboard deletion/prose restoration and bulk entity workflows across desktop and phones.
+
 ## 0.1.0-alpha.1 — 2026-10-05
 
 - Initial SvelteKit story workspace with SQLite and Drizzle migrations.

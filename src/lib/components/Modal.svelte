@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
   import { X } from '@lucide/svelte';
+  import { modalMotion } from '#lib/application/motion';
   let {
     title,
     onclose,
@@ -16,6 +17,7 @@
 </script>
 
 <dialog
+  in:modalMotion|global
   bind:this={dialog}
   class:wide
   oncancel={(e) => {

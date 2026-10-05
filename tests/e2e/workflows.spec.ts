@@ -26,6 +26,119 @@ async function saved(page: Page) {
   await expect(page.getByRole('status')).toHaveText('All changes saved');
 }
 
+test('deleting a selected moment previews safely, preserves undo and persists the deletion', async ({
+  page
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Start a story' }).click();
+  await page.getByLabel('Story title').fill('Deletion regression');
+  await page.getByRole('button', { name: 'Create story', exact: true }).click();
+  await page.waitForURL('**/project/**');
+  await createScene(page, 'First moment', '1');
+  await createScene(page, 'Second moment', '2');
+  await page.getByRole('button', { name: 'Write this moment', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Scene prose' }).fill('A moment worth remembering.');
+  await page.getByRole('button', { name: 'Close writing workspace' }).click();
+  await page.locator('.story-node').filter({ hasText: 'Second moment' }).click();
+  await page.keyboard.press('Delete');
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Delete Second moment?');
+  await expect(dialog).toContainText('related records');
+  await dialog.getByRole('button', { name: 'Delete & keep undo', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator('.story-node')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Undo story change' }).click();
+  await expect(page.locator('.story-node')).toHaveCount(2);
+  await command(page, 'Second moment');
+  await page.getByRole('button', { name: 'Write this moment', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Scene prose' })).toContainText(
+    'worth remembering'
+  );
+  await page.getByRole('button', { name: 'Close writing workspace' }).click();
+  await page.getByRole('button', { name: 'Redo story change' }).click();
+  await saved(page);
+  await page.reload();
+  await expect(page.locator('.story-node')).toHaveCount(1);
+  await expect(page.locator('.story-node')).toContainText('First moment');
+  expect(errors).toEqual([]);
+});
+
+test('bulk entities preview validation, duplicate skipping, one-step undo and dark controls work on desktop and phone', async ({
+  page
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore the demo' }).click();
+  await page.waitForURL('**/project/**');
+  await page.getByRole('button', { name: 'Switch color theme' }).click();
+  const lens = page.getByLabel('Graph lens');
+  await expect(lens).toHaveCSS('color', 'rgb(228, 233, 221)');
+  const colors = await lens.evaluate((element) => {
+    const select = getComputedStyle(element);
+    const option = getComputedStyle(element.querySelector('option')!);
+    return {
+      scheme: select.colorScheme,
+      selectColor: select.color,
+      optionColor: option.color,
+      background: option.backgroundColor
+    };
+  });
+  expect(colors.scheme).toBe('dark');
+  expect(colors.optionColor).toBe(colors.selectColor);
+  expect(colors.background).toBe('rgb(32, 42, 37)');
+  for (const value of ['world', 'relationships', 'narrative']) await lens.selectOption(value);
+  await page.getByRole('button', { name: 'Bulk add', exact: true }).click();
+  let dialog = page.getByRole('dialog');
+  await dialog
+    .getByLabel('Entities', { exact: true })
+    .fill(
+      'Mara Venn\nMira Vale\nThe Starwell | location | A spring that remembers\nMira Vale\n| item'
+    );
+  await expect(dialog.getByRole('alert')).toContainText('Line 5');
+  await expect(dialog.getByRole('button', { name: 'Add 2 entities', exact: true })).toBeDisabled();
+  await dialog
+    .getByLabel('Entities', { exact: true })
+    .fill('Mara Venn\nMira Vale\nThe Starwell | location | A spring that remembers\nMira Vale');
+  await expect(dialog.getByLabel('Entity preview')).toContainText('2 duplicates skipped');
+  await dialog.getByRole('button', { name: 'Add 2 entities', exact: true }).click();
+  const panel = page.getByRole('complementary', { name: 'Entities and outline' });
+  await expect(panel).toContainText('Mira Vale');
+  await expect(panel).toContainText('The Starwell');
+  await page.getByRole('button', { name: 'Undo story change' }).click();
+  await expect(panel).not.toContainText('Mira Vale');
+  await expect(panel).not.toContainText('The Starwell');
+  await page.getByRole('button', { name: 'Redo story change' }).click();
+  await saved(page);
+  await page.reload();
+  await expect(panel).toContainText('Mira Vale');
+  await command(page, 'The Starwell');
+  await expect(page.getByLabel('Summary', { exact: true })).toHaveValue('A spring that remembers');
+  await page.getByRole('button', { name: 'Toggle entities panel' }).click();
+  await expect(panel).toHaveCount(0);
+  await command(page, 'Bulk add entities');
+  await expect(page.getByRole('dialog')).toContainText('Bulk add entities');
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.getByRole('button', { name: 'Toggle entities panel' }).click();
+  await expect(panel).toBeVisible();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Toggle entities panel' }).click();
+  await expect(panel).toBeVisible();
+  await page.getByRole('button', { name: 'Bulk add', exact: true }).click();
+  dialog = page.getByRole('dialog');
+  await dialog
+    .getByLabel('Entities', { exact: true })
+    .fill('Silver Compass | item | Always points home');
+  await dialog.getByRole('button', { name: 'Add 1 entity', exact: true }).click();
+  await expect(panel).toContainText('Silver Compass');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await saved(page);
+  expect(errors).toEqual([]);
+});
+
 test('a writer creates a temporal story, writes, reorders, and carries it through export/import', async ({
   page
 }, testInfo) => {
@@ -163,10 +276,10 @@ test('the demo exposes a real warning and keyboard search, with usable phone dra
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore the demo' }).click();
   await page.waitForURL('**/project/**');
-  await expect(page.getByRole('complementary', { name: 'Story shelf' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Toggle story shelf' }).click();
-  await expect(page.getByRole('complementary', { name: 'Story shelf' })).toBeVisible();
-  await page.getByRole('button', { name: 'Close story shelf' }).click();
+  await expect(page.getByRole('complementary', { name: 'Entities and outline' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Toggle entities panel' }).click();
+  await expect(page.getByRole('complementary', { name: 'Entities and outline' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close entities panel' }).click();
   await page.getByRole('button', { name: 'Toggle inspector' }).click();
   await expect(page.getByRole('complementary', { name: 'Story inspector' })).toBeVisible();
   await page.getByRole('button', { name: 'Close inspector' }).click();

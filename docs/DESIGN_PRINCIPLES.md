@@ -10,3 +10,7 @@
 8. **Useful alternatives.** Drawers replace permanent columns on phones. Commands, outline controls, and inspectors expose graph actions without requiring a precise drag gesture.
 9. **Writer authority.** Diagnostics describe modeled consequences; they do not forbid deliberate ambiguity, flashbacks, or delayed reveals.
 10. **Data belongs to the author.** Private defaults, open-source code, no required AI service, and complete portable exports.
+
+Motion stays brief and purposeful: desktop panes animate their width, phone drawers slide over the canvas, and dialogs enter gently. Content inside a collapsing pane keeps its width to avoid text reflow. Reduced-motion preferences disable these transitions. Native selects and their options use the same semantic theme colors as the workspace.
+
+The World entities pane groups entities by facet and retains Outline and Ideas tabs. Bulk add accepts up to 500 entities per batch, previews changes before applying them, and uses one undo transaction. Matching names (case insensitive) with identical facet sets are skipped; different facet sets remain distinct entities.

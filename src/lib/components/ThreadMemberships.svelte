@@ -26,5 +26,5 @@
   >
 {/each}
 {#if !ws.bundle?.threads.length}<p class="field-help">
-    Create a thread from the story shelf to follow this object across the story.
+    Create a thread from the entities panel to follow this object across the story.
   </p>{/if}

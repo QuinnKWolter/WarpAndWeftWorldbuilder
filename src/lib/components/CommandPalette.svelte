@@ -9,12 +9,14 @@
     ws,
     onclose,
     oncreate,
+    onbulkadd,
     onissues,
     onfit
   }: {
     ws: Workspace;
     onclose: () => void;
     oncreate: (kind: CreateKind) => void;
+    onbulkadd: () => void;
     onissues: () => void;
     onfit: () => void;
   } = $props();
@@ -33,6 +35,7 @@
         type: 'Lens',
         run: () => (ws.lens = lens)
       })),
+      { title: 'Bulk add entities', type: 'Command', run: onbulkadd },
       {
         title: 'Toggle temporal / whole story',
         type: 'View',

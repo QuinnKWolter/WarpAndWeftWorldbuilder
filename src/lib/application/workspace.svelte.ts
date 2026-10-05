@@ -2,8 +2,8 @@ import { base, type Bundle, type Selection, validateBundle } from '../domain/mod
 import { diagnose } from '../domain/diagnostics';
 import { projectGraph, type Lens } from '../domain/projections';
 import { restoreKeepingProse } from '../domain/operations';
+import { cloneJson as clone } from '../domain/clone';
 
-const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 export class Workspace {
   bundle = $state<Bundle>();
   selection = $state<Selection | null>(null);

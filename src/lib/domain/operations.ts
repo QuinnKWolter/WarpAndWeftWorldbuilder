@@ -1,7 +1,8 @@
 import { base, collections, validateBundle, type Bundle, type Selection } from './model';
+import { cloneJson } from './clone';
 
 export function cloneProject(input: Bundle, title = `${input.project.title} (copy)`): Bundle {
-  const b = structuredClone(input);
+  const b = cloneJson(input);
   const map = new Map<string, string>();
   map.set(b.project.id, crypto.randomUUID());
   for (const key of collections)
@@ -43,7 +44,7 @@ export function cloneProject(input: Bundle, title = `${input.project.title} (cop
   return validateBundle(copy);
 }
 export function deleteImpact(b: Bundle, selected: Selection) {
-  const copy = structuredClone(b);
+  const copy = cloneJson(b);
   const before = collections.reduce((n, k) => n + b[k].length, 0);
   removeObject(copy, selected);
   return before - collections.reduce((n, k) => n + copy[k].length, 0) - 1;
@@ -120,7 +121,7 @@ export function restoreKeepingProse(
   current: Bundle,
   commandState?: Bundle
 ): Bundle {
-  const restored = structuredClone(target);
+  const restored = cloneJson(target);
   const unitIds = new Set(restored.units.map((u) => u.id));
   const currentDocuments = current.documents
     .filter((d) => unitIds.has(d.unitId))

@@ -27,6 +27,14 @@ The primary browser workflow constructs Alice/Bob, a changing relationship, Begi
 
 Additional tests cover the original demo's real continuity warning, phone drawers, keyboard search, failed saves with local drafts, concurrent-window revision conflicts, semantic connection editing/deletion/undo, event steps, and placeholder merging with restored prose. Domain tests independently cover nonlinear chronology, inferred transfers/knowledge, interval boundaries, deterministic projections, validation, safe cascades, and merge/reference preservation.
 
+## Workspace polish follow-up — 2026-10-05
+
+The unreleased follow-up fixes proxy-backed deletion previews, adds bulk entity creation, clarifies the entities pane, themes native select options, centers dialogs, and adds reduced-motion-aware pane/dialog/control animation. No database migration or export-format change is required.
+
+Follow-up verification passed: ESLint/Prettier, zero-error/zero-warning Svelte checks, 25 domain/SQLite tests in three files, six Chromium workflows against development, six against the built Node launcher, and the production build. New browser regressions cover keyboard moment deletion with prose restoration and bulk creation with duplicates, validation, undo/redo, reload, dark controls, and a 390px phone viewport.
+
+Fresh production screenshots cover light/dark workspaces, dark bulk preview, phone writing, and phone bulk preview. These checks used isolated databases and recorded no browser errors or horizontal overflow. The existing development server and user database were left intact. Container checks in the original alpha table above were not repeated for this UI follow-up.
+
 ## Practical limits
 
 Read the [README limitations](../README.md#known-limitations), [scope map](REQUIREMENTS.md), and [roadmap](ROADMAP.md). There is no authentication, real-time collaboration, AI request execution, attachment storage, or inline mention autocomplete. Public access needs external access control. Spatial graph accessibility and large-project browser benchmarking remain incomplete; no WCAG certification or comprehensive performance certification is claimed.
