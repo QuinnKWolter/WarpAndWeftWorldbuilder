@@ -1,0 +1,12 @@
+services:
+  storygraph:
+    build: .
+    ports:
+      - '127.0.0.1:3000:3000'
+    environment:
+      ORIGIN: http://localhost:3000
+    volumes:
+      - storygraph-data:/app/data
+    restart: unless-stopped
+volumes:
+  storygraph-data:
