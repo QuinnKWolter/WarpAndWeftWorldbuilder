@@ -1,0 +1,17 @@
+node_modules/
+.svelte-kit/
+build/
+data/
+.env
+.env.*
+!.env.example
+test-results/
+playwright-report/
+coverage/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.DS_Store

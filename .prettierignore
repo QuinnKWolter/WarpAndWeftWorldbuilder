@@ -1,0 +1,11 @@
+node_modules
+.svelte-kit
+build
+data
+drizzle/meta
+pnpm-lock.yaml
+IDEA.md
+PROMPT.md
+playwright-report
+test-results
+static/screenshots

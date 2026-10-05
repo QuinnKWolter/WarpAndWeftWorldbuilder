@@ -1,0 +1,32 @@
+import { sqliteTable, text, integer, real, index, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import type { Json } from '../domain/model';
+
+const json = (name: string) => text(name, { mode: 'json' }).$type<Json>();
+const core = () => ({ id: text('id').primaryKey(), metadata: json('metadata').notNull() });
+const projectRef = () => text('project_id').notNull().references(() => projects.id, { onDelete:'cascade' });
+export const projects = sqliteTable('projects', {
+  ...core(), title: text('title').notNull(), description: text('description').notNull(),
+  createdAt: text('created_at').notNull(), updatedAt: text('updated_at').notNull(),
+  revision: integer('revision').notNull().default(0), settings: json('settings').notNull(), ownerId: text('owner_id').notNull().default('local')
+});
+export const objects = sqliteTable('objects', { id:text('id').primaryKey(), projectId:projectRef(), kind:text('kind').notNull() }, (t) => [index('objects_project_idx').on(t.projectId)]);
+const objectRef = () => text('id').primaryKey().references(() => objects.id,{onDelete:'cascade'});
+export const entities = sqliteTable('entities', { ...core(), id:objectRef(), projectId:projectRef(), name:text('name').notNull(), summary:text('summary').notNull(), description:text('description').notNull(), unresolved:integer('unresolved',{mode:'boolean'}).notNull() }, (t) => [index('entities_project_idx').on(t.projectId)]);
+export const facets = sqliteTable('entity_facets', { id:text('id').primaryKey(), entityId:text('entity_id').notNull().references(() => entities.id,{onDelete:'cascade'}), name:text('name').notNull() });
+export const units = sqliteTable('narrative_units', {
+  ...core(), id:objectRef(), projectId:projectRef(), title:text('title').notNull(), type:text('type').notNull(),
+  parentId:text('parent_id').references(():AnySQLiteColumn => units.id,{onDelete:'cascade'}), rank:real('rank').notNull(),
+  storyTime:real('story_time'), storyEnd:real('story_end'), timeLabel:text('time_label').notNull(), synopsis:text('synopsis').notNull(),
+  povId:text('pov_id').references(() => entities.id,{onDelete:'set null'}), status:text('status').notNull(), unresolved:integer('unresolved',{mode:'boolean'}).notNull(), unplaced:integer('unplaced',{mode:'boolean'}).notNull(), setup:integer('setup',{mode:'boolean'}).notNull()
+}, (t) => [index('units_project_parent_rank_idx').on(t.projectId,t.parentId,t.rank),index('units_story_time_idx').on(t.projectId,t.storyTime)]);
+export const events = sqliteTable('events', { ...core(), id:objectRef(), projectId:projectRef(), title:text('title').notNull(), description:text('description').notNull(), unitId:text('unit_id').references(() => units.id,{onDelete:'cascade'}), storyTime:real('story_time').notNull(), order:real('event_order').notNull(), requirements:json('requirements').notNull() });
+export const relationships = sqliteTable('relationships', { ...core(), id:objectRef(), projectId:projectRef(), sourceId:text('source_id').notNull().references(() => entities.id,{onDelete:'cascade'}), targetId:text('target_id').notNull().references(() => entities.id,{onDelete:'cascade'}), type:text('type').notNull(), label:text('label').notNull(), description:text('description').notNull(), directed:integer('directed',{mode:'boolean'}).notNull() });
+export const relationshipStates = sqliteTable('relationship_states', { ...core(), projectId:projectRef(), relationshipId:text('relationship_id').notNull().references(() => relationships.id,{onDelete:'cascade'}), from:real('valid_from').notNull(), until:real('valid_until'), label:text('label').notNull(), dimensions:json('dimensions').notNull(), unitId:text('unit_id').references(() => units.id,{onDelete:'cascade'}), eventId:text('event_id').references(() => events.id,{onDelete:'cascade'}), note:text('note').notNull() }, (t) => [index('relationship_states_time_idx').on(t.relationshipId,t.from)]);
+export const changes = sqliteTable('state_changes', { ...core(), projectId:projectRef(), subjectId:text('subject_id').notNull().references(() => entities.id,{onDelete:'cascade'}), key:text('property_key').notNull(), targetId:text('target_id').references(() => entities.id,{onDelete:'cascade'}), before:json('previous_value'), value:json('new_value').notNull(), storyTime:real('story_time').notNull(), order:real('change_order').notNull(), unitId:text('unit_id').references(() => units.id,{onDelete:'cascade'}), eventId:text('event_id').references(() => events.id,{onDelete:'cascade'}), note:text('note').notNull() }, (t) => [index('changes_subject_time_idx').on(t.projectId,t.subjectId,t.storyTime)]);
+export const threads = sqliteTable('threads', { ...core(), id:objectRef(), projectId:projectRef(), name:text('name').notNull(), description:text('description').notNull(), color:text('color').notNull() });
+export const memberships = sqliteTable('scene_memberships', { ...core(), projectId:projectRef(), unitId:text('unit_id').notNull().references(() => units.id,{onDelete:'cascade'}), entityId:text('entity_id').notNull().references(() => entities.id,{onDelete:'cascade'}), role:text('role').notNull() });
+export const threadMemberships = sqliteTable('thread_memberships', { ...core(), projectId:projectRef(), threadId:text('thread_id').notNull().references(() => threads.id,{onDelete:'cascade'}), objectId:text('object_id').notNull().references(() => objects.id,{onDelete:'cascade'}) });
+export const links = sqliteTable('semantic_links', { ...core(), projectId:projectRef(), sourceId:text('source_id').notNull().references(() => objects.id,{onDelete:'cascade'}), targetId:text('target_id').notNull().references(() => objects.id,{onDelete:'cascade'}), type:text('type').notNull() });
+export const documents = sqliteTable('documents', { ...core(), projectId:projectRef(), unitId:text('unit_id').notNull().unique().references(() => units.id,{onDelete:'cascade'}), content:json('content').notNull(), text:text('plain_text').notNull() });
+export const mentions = sqliteTable('entity_references', { ...core(), projectId:projectRef(), documentId:text('document_id').notNull().references(() => documents.id,{onDelete:'cascade'}), entityId:text('entity_id').notNull().references(() => entities.id,{onDelete:'cascade'}) });
+export const layouts = sqliteTable('view_layouts', { ...core(), projectId:projectRef(), lens:text('lens').notNull(), objectId:text('object_id').notNull().references(() => objects.id,{onDelete:'cascade'}), x:real('x').notNull(), y:real('y').notNull() });
