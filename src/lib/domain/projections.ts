@@ -1,6 +1,8 @@
 import type { Bundle, Selection } from './model';
 import { siblings, storyOrder, narrativeOrder } from './order';
 import { resolveRelationshipState } from './state';
+import { facetIcon, presentation } from './presentation';
+import type { StoryFolder } from './organization';
 
 export const lenses = ['narrative', 'world', 'relationships', 'threads', 'chronology'] as const;
 export type Lens = (typeof lenses)[number];
@@ -16,6 +18,8 @@ export type GraphNode = {
     threads: { name: string; color: string }[];
     current: boolean;
     detail: number;
+    icon: StoryFolder['icon'];
+    accent: string;
   };
 };
 export type GraphEdge = {
@@ -45,6 +49,9 @@ export function projectGraph(
 ): { nodes: GraphNode[]; edges: GraphEdge[] } {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
+  const records = new Map(
+    [...b.entities, ...b.units, ...b.events, ...b.threads].map((object) => [object.id, object])
+  );
   const threadIds = (id: string) =>
     b.threadMemberships.filter((m) => m.objectId === id).map((m) => m.threadId);
   const inThread = (id: string) =>
@@ -60,6 +67,15 @@ export function projectGraph(
     unresolved = false,
     current = false
   ) => {
+    const record = records.get(id);
+    const style = presentation(
+      record?.metadata ?? {},
+      record && 'facets' in record
+        ? facetIcon(record.facets)
+        : kind === 'unit'
+          ? 'book'
+          : 'sparkles'
+    );
     const layout = b.layouts.find(
       (l) => l.objectId === id && l.lens === `${c.lens}:${c.parentId ?? 'root'}`
     );
@@ -74,6 +90,8 @@ export function projectGraph(
         unresolved,
         current,
         detail: c.detail,
+        icon: style.icon,
+        accent: style.color,
         threads: b.threads
           .filter((t) => threadIds(id).includes(t.id))
           .map((t) => ({ name: t.name, color: t.color }))

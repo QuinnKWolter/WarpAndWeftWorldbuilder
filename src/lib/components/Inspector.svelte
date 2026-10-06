@@ -1,5 +1,7 @@
 <script lang="ts">
   import { X, Trash2 } from '@lucide/svelte';
+  import { fly } from 'svelte/transition';
+  import { motionDuration } from '#lib/application/motion';
   import type { Workspace } from '#lib/application/workspace.svelte';
   import type { CreateKind } from './CreateDialog.svelte';
   import SceneInspector from './SceneInspector.svelte';
@@ -52,63 +54,68 @@
       >
     </div>
   </header>
-  {#if unit}<SceneInspector {ws} {unit} {oncreate} {onwrite} />{:else if entity}<EntityInspector
-      {ws}
-      {entity}
-      onconnect={() => oncreate('relationship')}
-    />{:else if relationship}<RelationshipInspector
-      {ws}
-      {relationship}
-      onstate={() => oncreate('state')}
-    />{:else if event}<EventInspector {ws} {event} />{:else if thread}
-    <div class="inspector-body">
-      <label
-        >Name<input
-          value={thread.name}
-          onchange={(e) =>
-            ws.mutate((b) => {
-              const t = b.threads.find((t) => t.id === thread.id);
-              if (t) t.name = e.currentTarget.value;
-            })}
-        /></label
-      ><label
-        >Description<textarea
-          rows="4"
-          value={thread.description}
-          onchange={(e) =>
-            ws.mutate((b) => {
-              const t = b.threads.find((t) => t.id === thread.id);
-              if (t) t.description = e.currentTarget.value;
-            })}></textarea></label
-      ><label
-        >Color<input
-          type="color"
-          value={thread.color}
-          onchange={(e) =>
-            ws.mutate((b) => {
-              const t = b.threads.find((t) => t.id === thread.id);
-              if (t) t.color = e.currentTarget.value;
-            })}
-        /></label
-      ><button
-        class="primary full"
-        onclick={() => {
-          ws.lens = 'threads';
-          ws.threadIds = [thread.id];
-        }}>Follow this thread</button
-      >
-      <div class="section-heading"><span>ON THIS THREAD</span></div>
-      {#each ws.bundle?.threadMemberships.filter((m) => m.threadId === thread.id) ?? [] as m (m.id)}<button
-          class="detail-row"
-          onclick={() => {
-            const selection = ws.bundle && objectSelection(ws.bundle, m.objectId);
-            if (selection) ws.navigate(selection);
-          }}>{ws.bundle ? objectName(ws.bundle, m.objectId) : 'Story object'}</button
-        >{/each}
-    </div>
-  {:else}<div class="inspector-empty">
-      <span class="ornament">✧</span>
-      <h3>A closer look</h3>
-      <p>Select a moment, an entity, or a connection to explore the details.</p>
-    </div>{/if}
+  {#key ws.selection?.id}<div
+      class="inspector-content"
+      in:fly={{ x: 14, duration: motionDuration(260) }}
+    >
+      {#if unit}<SceneInspector {ws} {unit} {oncreate} {onwrite} />{:else if entity}<EntityInspector
+          {ws}
+          {entity}
+          onconnect={() => oncreate('relationship')}
+        />{:else if relationship}<RelationshipInspector
+          {ws}
+          {relationship}
+          onstate={() => oncreate('state')}
+        />{:else if event}<EventInspector {ws} {event} />{:else if thread}
+        <div class="inspector-body">
+          <label
+            >Name<input
+              value={thread.name}
+              onchange={(e) =>
+                ws.mutate((b) => {
+                  const t = b.threads.find((t) => t.id === thread.id);
+                  if (t) t.name = e.currentTarget.value;
+                })}
+            /></label
+          ><label
+            >Description<textarea
+              rows="4"
+              value={thread.description}
+              onchange={(e) =>
+                ws.mutate((b) => {
+                  const t = b.threads.find((t) => t.id === thread.id);
+                  if (t) t.description = e.currentTarget.value;
+                })}></textarea></label
+          ><label
+            >Color<input
+              type="color"
+              value={thread.color}
+              onchange={(e) =>
+                ws.mutate((b) => {
+                  const t = b.threads.find((t) => t.id === thread.id);
+                  if (t) t.color = e.currentTarget.value;
+                })}
+            /></label
+          ><button
+            class="primary full"
+            onclick={() => {
+              ws.lens = 'threads';
+              ws.threadIds = [thread.id];
+            }}>Follow this thread</button
+          >
+          <div class="section-heading"><span>ON THIS THREAD</span></div>
+          {#each ws.bundle?.threadMemberships.filter((m) => m.threadId === thread.id) ?? [] as m (m.id)}<button
+              class="detail-row"
+              onclick={() => {
+                const selection = ws.bundle && objectSelection(ws.bundle, m.objectId);
+                if (selection) ws.navigate(selection);
+              }}>{ws.bundle ? objectName(ws.bundle, m.objectId) : 'Story object'}</button
+            >{/each}
+        </div>
+      {:else}<div class="inspector-empty">
+          <span class="ornament">✧</span>
+          <h3>A closer look</h3>
+          <p>Select a moment, an entity, or a connection to explore the details.</p>
+        </div>{/if}
+    </div>{/key}
 </aside>

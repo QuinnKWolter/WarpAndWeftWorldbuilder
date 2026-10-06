@@ -35,10 +35,20 @@ Follow-up verification passed: ESLint/Prettier, zero-error/zero-warning Svelte c
 
 Fresh production screenshots cover light/dark workspaces, dark bulk preview, phone writing, and phone bulk preview. These checks used isolated databases and recorded no browser errors or horizontal overflow. The existing development server and user database were left intact. Container checks in the original alpha table above were not repeated for this UI follow-up.
 
+## Warp & Weft organization and motion follow-up — 2026-10-05
+
+The app is now named Warp & Weft Worldbuilder. This follow-up adds persistent nested collection folders, names/colors/icons, item and folder dragging, outline nesting/collapse, readable summaries, entity/moment appearance, keyboard alternatives, automatic pane edge scrolling, and menu dismissal. Folder deletion retains contents. Narrative ordering remains independent of chronology. Typed organization references survive save, export/import, duplication, deletion, merge, and undo.
+
+The graph stays mounted while fitting, arranging, and changing lenses. Folder/list/inspector transitions and node/camera animation use existing Svelte and Svelte Flow capabilities. Device/Smooth/Reduced preferences are available in Settings & shortcuts. Browser checks sample actual intermediate folder heights and camera transforms; production visual QA also samples pane widths. A phone resize regression ensures the drawer close button remains available.
+
+Verification: ESLint/Prettier, zero-error/zero-warning Svelte checks, 31 passing domain/SQLite tests in four files, eight Chromium workflows against development and the production Node launcher, and a successful production build. Fresh production screenshots cover the woven brand, light/dark workspaces, folder editing, readable summaries, phone folders/writing/summaries, and bulk previews. Isolated test databases recorded no browser errors or horizontal overflow. Container checks from the original alpha were not repeated for this UI follow-up.
+
+Exports now use `.warp-weft.json`; the v1 format identifier, legacy imports, existing database path, and recovery/theme storage keys remain compatible. No database migration is required. Native pane dragging targets mouse/trackpad use; keyboard reordering and summary/inspector placement controls provide alternatives on touch devices.
+
 ## Practical limits
 
 Read the [README limitations](../README.md#known-limitations), [scope map](REQUIREMENTS.md), and [roadmap](ROADMAP.md). There is no authentication, real-time collaboration, AI request execution, attachment storage, or inline mention autocomplete. Public access needs external access control. Spatial graph accessibility and large-project browser benchmarking remain incomplete; no WCAG certification or comprehensive performance certification is claimed.
 
-The production build reports a large ELK chunk (about 1.43 MB raw / 442 KB gzip). ELK loads only when Arrange is invoked. The prose editor also loads on opening writing. The workspace route chunk is about 275 KB raw / 86 KB gzip, with shared framework and graph chunks in addition. The bundle warning is retained rather than hidden by increasing the warning threshold.
+The production build reports a large ELK chunk (about 1.43 MB raw / 442 KB gzip). ELK loads only when Arrange is invoked. The prose editor also loads on opening writing. The workspace route chunk is about 308 KB raw / 96 KB gzip, with shared framework and graph chunks in addition. The bundle warning is retained rather than hidden by increasing the warning threshold.
 
 GitHub Actions is configured, but a remote CI run has not been performed because this task did not publish a repository. Docker checks verify the application build/runtime; they are not a certification of the container base image's entire operating-system supply chain.

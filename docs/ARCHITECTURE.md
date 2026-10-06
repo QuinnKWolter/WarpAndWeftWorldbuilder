@@ -1,6 +1,6 @@
 # Architecture
 
-Storygraph uses SvelteKit 3, Svelte 5, strict TypeScript, a Node 24 server, Drizzle ORM, and local SQLite. Svelte Flow handles graph interaction; ELK is loaded for automatic arrangement. Tiptap isolates the ProseMirror writing surface. Tailwind is integrated and semantic CSS variables define the shared visual language.
+Warp & Weft Worldbuilder uses SvelteKit 3, Svelte 5, strict TypeScript, a Node 24 server, Drizzle ORM, and local SQLite. Svelte Flow handles graph interaction; ELK is loaded for automatic arrangement. Tiptap isolates the ProseMirror writing surface. Tailwind is integrated and semantic CSS variables define the shared visual language.
 
 ## Boundaries
 
@@ -11,6 +11,8 @@ Storygraph uses SvelteKit 3, Svelte 5, strict TypeScript, a Node 24 server, Driz
 `src/lib/application` owns UI orchestration, local history, autosave serialization, browser recovery, layout commands, and file downloads. `Workspace` distinguishes selected lens, point, panels, and selection from canonical story data. Positions live in `view_layouts`, never in narrative order.
 
 `src/lib/components` owns graph nodes/edges, shelf, timeline, inspectors, accessible dialogs, commands, and the writing adapter. The project route composes these surfaces. Providers have a typed boundary in `src/lib/assistant`; none performs requests yet.
+
+`domain/organization.ts` validates portable collection folders, placements, and narrative collapse state in project settings. These typed references are cleaned on deletion/merge and remapped on duplication/import. `domain/presentation.ts` supplies optional entity/unit colors and icons. Neither changes narrative hierarchy or time. Browser-only motion preferences and drag/menu behavior live in application helpers; the mounted graph animates visual positions while canonical layouts remain final coordinates.
 
 ## Why separate entities, units, events, and changes?
 

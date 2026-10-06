@@ -5,6 +5,7 @@ import { demoProject } from '../src/lib/domain/demo';
 import { base, unitSchema, collections, type Bundle } from '../src/lib/domain/model';
 import { cloneProject } from '../src/lib/domain/operations';
 import { siblings, placeUnit } from '../src/lib/domain/order';
+import { organization, writeOrganization, moveShelfObject } from '../src/lib/domain/organization';
 const connections: ReturnType<typeof openDatabase>[] = [];
 afterEach(() => {
   for (const c of connections) c.sqlite.close();
@@ -16,6 +17,23 @@ const setup = () => {
   return { repo: new ProjectRepository(c), c };
 };
 describe('transactional SQLite persistence', () => {
+  it('round-trips organization, folder styles and item order through SQLite and cloning', () => {
+    const { repo } = setup();
+    const b = demoProject();
+    const o = organization(b);
+    o.folders[0].name = 'The cast';
+    o.folders[0].icon = 'flag';
+    o.folders[0].color = '#778899';
+    o.folders[0].collapsed = true;
+    writeOrganization(b, o);
+    moveShelfObject(b, b.entities[0].id, o.folders[1].id);
+    const saved = repo.save(b, null);
+    const loaded = repo.load(saved.project.id)!;
+    expect(organization(loaded)).toEqual(organization(saved));
+    const copy = cloneProject(loaded);
+    repo.save(copy, null);
+    expect(organization(repo.load(copy.project.id)!).folders[0].name).toBe('The cast');
+  });
   it('persists every domain collection, prose, relationship history, and changes', () => {
     const { repo } = setup();
     const b = repo.save(demoProject(), null);

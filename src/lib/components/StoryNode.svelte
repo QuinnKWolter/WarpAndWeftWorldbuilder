@@ -1,33 +1,30 @@
 <script lang="ts">
   import { Handle, Position, type NodeProps, type Node } from '@xyflow/svelte';
-  import { BookOpen, MapPin, UserRound, Diamond, Layers, CircleHelp } from '@lucide/svelte';
+  import { CircleHelp } from '@lucide/svelte';
+  import FolderIcon from './FolderIcon.svelte';
   import type { GraphNode } from '#lib/domain/projections';
+  import { fly } from 'svelte/transition';
+  import { motionDuration } from '#lib/application/motion';
   let { data, selected }: NodeProps<Node<GraphNode['data']>> = $props();
-  const Icon = $derived(
-    data.unresolved
-      ? CircleHelp
-      : data.kind === 'unit'
-        ? BookOpen
-        : data.subtitle.includes('location')
-          ? MapPin
-          : data.subtitle.includes('character')
-            ? UserRound
-            : data.kind === 'thread'
-              ? Layers
-              : Diamond
-  );
 </script>
 
 <Handle type="target" position={Position.Left} />
 <div
   class="story-node"
+  in:fly={{ y: 16, duration: motionDuration(320) }}
   class:selected
   class:ghost={data.unresolved}
   class:current={data.current}
   title={data.summary}
+  style:border-top-color={data.accent}
 >
   <div class="node-eyebrow">
-    <Icon size={14} /><span>{data.subtitle}</span>{#if data.current}<span
+    <span style:color={data.accent}
+      >{#if data.unresolved}<CircleHelp size={14} />{:else}<FolderIcon
+          name={data.icon}
+          size={14}
+        />{/if}</span
+    ><span>{data.subtitle}</span>{#if data.current}<span
         class="now-dot"
         aria-label="Selected story moment"
       ></span>{/if}

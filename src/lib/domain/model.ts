@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validateOrganization } from './organization';
 
 const id = z.uuid();
 const text = z.string().max(200000);
@@ -288,6 +289,7 @@ export function validateBundle(input: unknown): Bundle {
     b.layouts.map((l) => `${l.lens}:${l.objectId}`),
     'layout position'
   );
+  validateOrganization(b);
   return b;
 }
 

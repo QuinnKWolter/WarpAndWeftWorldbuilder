@@ -1,5 +1,6 @@
 import { base, collections, validateBundle, type Bundle, type Selection } from './model';
 import { cloneJson } from './clone';
+import { organization, remapOrganization, writeOrganization } from './organization';
 
 export function cloneProject(input: Bundle, title = `${input.project.title} (copy)`): Bundle {
   const b = cloneJson(input);
@@ -7,6 +8,7 @@ export function cloneProject(input: Bundle, title = `${input.project.title} (cop
   map.set(b.project.id, crypto.randomUUID());
   for (const key of collections)
     for (const record of b[key]) map.set(record.id, crypto.randomUUID());
+  for (const folder of organization(b).folders) map.set(folder.id, crypto.randomUUID());
   const referenceFields = new Set([
     'id',
     'parentId',
@@ -38,6 +40,9 @@ export function cloneProject(input: Bundle, title = `${input.project.title} (cop
     return value;
   };
   const copy = walk(b) as Bundle;
+  // Settings contain organizational references, which need their own typed remap.
+  copy.project.settings = cloneJson(b.project.settings);
+  remapOrganization(copy, map);
   copy.project.title = title;
   copy.project.revision = 0;
   copy.project.createdAt = copy.project.updatedAt = new Date().toISOString();
@@ -101,6 +106,12 @@ export function removeObject(b: Bundle, selected: Selection) {
   b.documents = b.documents.filter((d) => !removed.has(d.id));
   b.mentions = b.mentions.filter((m) => !removed.has(m.documentId) && !removed.has(m.entityId));
   b.layouts = b.layouts.filter((l) => !removed.has(l.objectId));
+  if (b.project.settings.organization) {
+    const o = organization(b);
+    o.placements = o.placements.filter((p) => !removed.has(p.objectId));
+    o.collapsedUnits = o.collapsedUnits.filter((id) => !removed.has(id));
+    writeOrganization(b, o);
+  }
 }
 export function addMembership(b: Bundle, unitId: string, entityId: string) {
   if (b.memberships.some((m) => m.unitId === unitId && m.entityId === entityId)) return;

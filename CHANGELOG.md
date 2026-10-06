@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Name the app **Warp & Weft Worldbuilder**, with woven branding and `.warp-weft.json` exports. Preserve legacy imports and existing storage paths.
+- Add persistent nested folders for entities, ideas, and plot threads, with editable names, colors, icons, and collapse state. Drag folders/items to move or reorder, with drop markers and pane edge scrolling; remove folders while retaining contents.
+- Add drag-to-nest outline organization, persisted container collapse, search expansion, Alt+↑/↓ reordering, and Alt+Enter summaries. Narrative reordering preserves story chronology.
+- Add double-click summaries with notes, connections, folder selection, and edit/write/explore actions. Double-click canvas entities for summaries and timeline points for details.
+- Add entity/moment accent colors and icons to panes and graph cards.
+- Animate folder height, list reordering, inspector selection, graph arrangement, camera fitting and lens changes. Keep the canvas mounted and provide System/Smooth/Reduced motion preferences.
+- Validate and remap folder references through save, export/import, duplication, deletion, and placeholder merging; retain organization through undo/redo.
 - Rename the left workspace pane to World entities, with Entities, Outline, and Ideas tabs.
 - Bulk add up to 500 entities from one-per-line names or `Name | facets | summary`, with preview, line-specific validation, duplicate skipping, autosave, and one-step undo/redo. Also available through the command palette.
 - Smooth desktop pane collapse/expansion, phone drawer slides, dialog entrances, menus, writing-panel entrances, and control/card feedback, respecting reduced-motion preferences.

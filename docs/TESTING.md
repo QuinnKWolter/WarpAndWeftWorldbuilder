@@ -12,6 +12,8 @@ Each E2E invocation owns a fresh database and server. The default server starts 
 
 The deletion regression clicks one of two moment nodes, presses Delete, confirms the impact preview, checks undo restores its prose, then redoes and reloads to confirm persistence. The bulk workflow checks preview errors and duplicate skipping, atomic undo/redo, reload persistence, dark select colors, pane toggles, and phone creation with reduced motion enabled.
 
+Organization domain/SQLite tests cover default folders, reference validation, nesting/cycle guards, independent ordering, safe folder removal, deletion/merge cleanup, clone remapping, and persistence. Two browser workflows exercise actual pointer drags, folder styles/nesting/removal/undo/reload/import, outline nesting and keyboard reordering without changing chronology, summaries/edit/write, appearance, search expansion, and phone inspection. Animation checks sample intermediate rendered folder heights and camera transforms, so static CSS duration declarations cannot satisfy them.
+
 ## Release checks
 
 Run the complete CI suite plus a Docker build. Start the production container with a named volume, create a project, restart it, and verify the project is retained. Verify a clean frozen-lockfile install independently of the current development node_modules. Record results in `RELEASE_STATUS.md`.

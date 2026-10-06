@@ -8,6 +8,7 @@ import {
   type Selection
 } from './model';
 import { breadcrumbs, siblings } from './order';
+import { organization, writeOrganization } from './organization';
 import { addMembership } from './operations';
 
 /** Preserve the narrative envelope and its connections when an unknown becomes concrete. */
@@ -113,5 +114,14 @@ export function mergePlaceholder(b: Bundle, sourceId: string, targetId: string) 
   );
   b.layouts = b.layouts.filter((l) => l.objectId !== sourceId);
   b.units = b.units.filter((u) => u.id !== sourceId);
+  if (b.project.settings.organization) {
+    const o = organization(b);
+    const targetPlaced = o.placements.some((p) => p.objectId === targetId);
+    o.placements = o.placements
+      .filter((p) => !(p.objectId === sourceId && targetPlaced))
+      .map((p) => (p.objectId === sourceId ? { ...p, objectId: targetId } : p));
+    o.collapsedUnits = o.collapsedUnits.filter((id) => id !== sourceId);
+    writeOrganization(b, o);
+  }
   validateBundle(b);
 }

@@ -1,9 +1,10 @@
 <script lang="ts">
   import { ChevronLeft, ChevronRight, Clock3 } from '@lucide/svelte';
   import type { Workspace } from '#lib/application/workspace.svelte';
+  import type { Selection } from '#lib/domain/model';
   import { narrativeOrder, storyOrder } from '#lib/domain/order';
   import { tick } from 'svelte';
-  let { ws }: { ws: Workspace } = $props();
+  let { ws, onsummary }: { ws: Workspace; onsummary: (selection: Selection) => void } = $props();
   let mode = $state('story');
   let events = $state(false);
   let rail: HTMLDivElement;
@@ -101,6 +102,7 @@
           ws.at = p.time;
           ws.atOrder = p.order;
         }}
+        ondblclick={() => onsummary({ kind: p.kind, id: p.id })}
         title={p.title}><i></i><span>{p.label}</span><small>{p.title}</small></button
       >{/each}{#if !points.length}<p class="field-help">
         Add a story point to a scene to watch your world change.

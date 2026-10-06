@@ -25,7 +25,8 @@
   import type { PageData } from './$types';
   import type { Connection, Edge } from '@xyflow/svelte';
   import { Workspace } from '#lib/application/workspace.svelte';
-  import { base } from '#lib/domain/model';
+  import { base, type Selection } from '#lib/domain/model';
+  import type { FolderSection } from '#lib/domain/organization';
   import {
     removeObject,
     deleteImpact,
@@ -38,7 +39,11 @@
   import { product } from '#lib/product';
   import Shelf from '#lib/components/Shelf.svelte';
   import BulkEntitiesDialog from '#lib/components/BulkEntitiesDialog.svelte';
+  import FolderDialog from '#lib/components/FolderDialog.svelte';
+  import ObjectSummary from '#lib/components/ObjectSummary.svelte';
+  import MotionPreference from '#lib/components/MotionPreference.svelte';
   import { panelMotion } from '#lib/application/motion';
+  import { dismissMenu } from '#lib/application/interactions';
   import GraphCanvas from '#lib/components/GraphCanvas.svelte';
   import Inspector from '#lib/components/Inspector.svelte';
   import Timeline from '#lib/components/Timeline.svelte';
@@ -57,6 +62,25 @@
   let settings = $state(false);
   let deleteDialog = $state(false);
   let bulkEntities = $state(false);
+  let summary = $state<Selection | null>(null);
+  let folderDialog = $state<{
+    id: string | null;
+    section: FolderSection;
+    parentId?: string | null;
+  } | null>(null);
+  function inspect(selection: Selection) {
+    ws.navigate(selection);
+    if (window.innerWidth >= 1000) showInspector = true;
+  }
+  function openSummary(selection: Selection) {
+    ws.select(selection);
+    summary = selection;
+  }
+  function editDetails(selection: Selection) {
+    ws.navigate(selection);
+    showInspector = true;
+    if (window.innerWidth < 1000) showShelf = false;
+  }
   let create = $state<{
     kind: CreateKind;
     beforeId?: string | null;
@@ -317,7 +341,7 @@
         ><button class="icon-button" aria-label="Switch color theme" onclick={theme}
           ><Sun size={17} class="light-icon" /><Moon size={17} class="dark-icon" /></button
         >
-        <details class="workspace-menu">
+        <details class="workspace-menu" use:dismissMenu>
           <summary aria-label="Project menu"><MoreHorizontal size={20} /></summary>
           <div>
             <button onclick={() => exportProject(ws.bundle!)}
@@ -349,11 +373,18 @@
           transition:panelMotion={{ side: -1 }}
           inert={!showShelf || focused}
         >
-          {#if window.innerWidth < 1000}<button
-              class="drawer-close icon-button"
-              aria-label="Close entities panel"
-              onclick={() => (showShelf = false)}><X size={18} /></button
-            >{/if}<Shelf {ws} {oncreate} onbulkadd={() => (bulkEntities = true)} />
+          <button
+            class="drawer-close icon-button"
+            aria-label="Close entities panel"
+            onclick={() => (showShelf = false)}><X size={18} /></button
+          ><Shelf
+            {ws}
+            {oncreate}
+            onbulkadd={() => (bulkEntities = true)}
+            oninspect={inspect}
+            onsummary={openSummary}
+            onfolder={(id, section, parentId) => (folderDialog = { id, section, parentId })}
+          />
         </div>{/if}
       <main class="canvas-column">
         <div class="canvas-toolbar">
@@ -442,13 +473,16 @@
               >{/each}<button onclick={() => (ws.threadIds = [])}>All threads</button>
           </div>{/if}
         <div class="canvas-area">
-          {#key canvasVersion}<GraphCanvas
-              {ws}
-              oncreate={() => oncreate('unit')}
-              {onconnect}
-              {onedge}
-              onwrite={write}
-            />{/key}
+          <GraphCanvas
+            {ws}
+            fitRequest={canvasVersion}
+            oncreate={() => oncreate('unit')}
+            {onconnect}
+            {onedge}
+            onwrite={write}
+            onsummary={openSummary}
+            oninspect={inspect}
+          />
           <div class="canvas-caption"><span>✧</span> A story is made of changes.</div>
           <button
             class="arrange-button secondary"
@@ -490,7 +524,7 @@
           />
         </div>{/if}
     </div>
-    {#if !focused}<Timeline {ws} />{/if}
+    {#if !focused}<Timeline {ws} onsummary={openSummary} />{/if}
     <footer class="workspace-status">
       <div>
         <span class="status-dot"></span><span>{ws.message || 'Your story. Your pace.'}</span>
@@ -507,6 +541,26 @@
   </div>
   {#if create}<CreateDialog {ws} {...create} onclose={() => (create = null)} />{/if}
   {#if bulkEntities}<BulkEntitiesDialog {ws} onclose={() => (bulkEntities = false)} />{/if}
+  {#if folderDialog}<FolderDialog
+      {ws}
+      {...folderDialog}
+      onclose={() => (folderDialog = null)}
+    />{/if}
+  {#if summary}<ObjectSummary
+      {ws}
+      selection={summary}
+      onclose={() => (summary = null)}
+      onedit={editDetails}
+      onwrite={() => {
+        summary = null;
+        void write();
+      }}
+      onfocus={() => {
+        ws.parentId = summary!.id;
+        summary = null;
+        canvasVersion++;
+      }}
+    />{/if}
   {#if command}<CommandPalette
       {ws}
       onclose={() => (command = false)}
@@ -667,6 +721,7 @@
     >{/if}
   {#if settings}<Modal title="Your workspace" onclose={() => (settings = false)}
       ><div class="dialog-form">
+        <MotionPreference />
         <span class="eyebrow">PRIVATE BY DEFAULT</span>
         <p>
           Your stories are saved in this installation’s SQLite database. There is no telemetry or
@@ -684,6 +739,8 @@
           ><span>Undo story changes <kbd>Ctrl / ⌘ Z</kbd></span><span
             >Redo story changes <kbd>Ctrl / ⌘ Shift Z</kbd></span
           ><span>Step through story time <kbd>← →</kbd></span><span
+            >Reorder a focused pane item <kbd>Alt ↑ / ↓</kbd></span
+          ><span>Read a focused pane item <kbd>Alt Enter</kbd></span><span
             >Delete selected object <kbd>Delete</kbd></span
           >
         </div>

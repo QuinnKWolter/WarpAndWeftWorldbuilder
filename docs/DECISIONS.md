@@ -28,9 +28,17 @@ Consequences: users can express ordinals, elapsed time, or timestamps. Within-po
 
 Context: users need complete exports immediately; attachments are optional alpha scope.
 
-Decision: one validated `.storygraph.json` file, consistent ID remapping on import, and a separate Markdown manuscript export.
+Decision: one validated `.warp-weft.json` file, consistent ID remapping on import, and a separate Markdown manuscript export. Retain `format: "storygraph"` and legacy file imports through the product rename.
 
 Consequences: no archive extraction or asset path hazards. ZIP/asset support needs a future format extension.
+
+## Portable pane organization and explicit motion
+
+Decision: store typed folder trees, item ranks, and collapse state in project settings; store entity/unit appearance in metadata. Keep narrative outline hierarchy and story chronology independent of collection folders. Validate references and remap them on import/duplication without adding a database migration.
+
+Decision: keep the graph mounted across lens and camera changes; interpolate node positions with requestAnimationFrame, animate fitting through Svelte Flow, and use Svelte slide/flip transitions for pane organization. A browser preference defaults to the device's motion setting and permits explicit Smooth or Reduced motion.
+
+Consequences: organization travels with a project and participates in undo; visual transitions remain lightweight and avoid a new animation dependency. Native drag has keyboard and inspector/summary alternatives, with touch organization using those controls.
 
 ## Local deployment workflow
 

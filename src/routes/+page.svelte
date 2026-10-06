@@ -14,6 +14,7 @@
   } from '@lucide/svelte';
   import Modal from '#lib/components/Modal.svelte';
   import { product } from '#lib/product';
+  import { dismissMenu } from '#lib/application/interactions';
   import { api, readImport } from '#lib/application/files';
   import { validateBundle, type Bundle } from '#lib/domain/model';
   type ProjectSummary = { id: string; title: string; description: string; updatedAt: string };
@@ -117,8 +118,10 @@
 >
 <div class="dashboard">
   <header class="dashboard-header">
-    <a href="/" class="brand"
-      ><img src="/favicon.svg" alt="" width="30" height="30" />{product.name}</a
+    <a href="/" class="brand" aria-label={product.name}
+      ><img src="/favicon.svg" alt="" width="34" height="34" /><span
+        >Warp &amp; Weft<small>Worldbuilder</small></span
+      ></a
     >
     <div>
       <span class="small muted desktop-only">A private space for your imagination</span><button
@@ -220,7 +223,7 @@
           {#each projects as p (p.id)}<article class="project-card">
               <div class="project-card-top">
                 <span class="project-emblem"><Feather size={22} /></span>
-                <details class="project-menu">
+                <details class="project-menu" use:dismissMenu>
                   <summary aria-label={`Options for ${p.title}`}
                     ><MoreHorizontal size={19} /></summary
                   >
@@ -267,7 +270,7 @@
           <FolderOpen size={25} />
           <div>
             <h3>A shelf ready for your first story.</h3>
-            <p>Start with a blank canvas, explore the demo, or bring a Storygraph export.</p>
+            <p>Start with a blank canvas, explore the demo, or bring a worldbuilder export.</p>
           </div>
         </div>{/if}
     </section>
@@ -292,7 +295,7 @@
   accept=".json,application/json"
   bind:this={fileInput}
   onchange={(e) => importFile(e.currentTarget.files?.[0])}
-  aria-label="Import Storygraph file"
+  aria-label="Import worldbuilder file"
 />
 {#if modal}<Modal
     title={modal === 'create'

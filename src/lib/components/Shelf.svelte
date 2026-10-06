@@ -1,56 +1,63 @@
 <script lang="ts">
-  import {
-    Search,
-    Plus,
-    UserRound,
-    MapPin,
-    Diamond,
-    Layers,
-    BookOpen,
-    CircleHelp,
-    ChevronRight
-  } from '@lucide/svelte';
+  import { Search, Plus, FolderPlus } from '@lucide/svelte';
+  import { fly } from 'svelte/transition';
   import type { Workspace } from '#lib/application/workspace.svelte';
+  import type { Selection } from '#lib/domain/model';
   import type { CreateKind } from './CreateDialog.svelte';
-  import { narrativeOrder, breadcrumbs, placeUnit } from '#lib/domain/order';
+  import type { FolderSection } from '#lib/domain/organization';
+  import { motionDuration } from '#lib/application/motion';
+  import { dragScroll } from '#lib/application/interactions';
+  import CollectionTree from './CollectionTree.svelte';
+  import OutlineTree from './OutlineTree.svelte';
+  import { facetIcon, presentation } from '#lib/domain/presentation';
   let {
     ws,
     oncreate,
-    onbulkadd
-  }: { ws: Workspace; oncreate: (kind: CreateKind) => void; onbulkadd: () => void } = $props();
+    onbulkadd,
+    oninspect,
+    onsummary,
+    onfolder
+  }: {
+    ws: Workspace;
+    oncreate: (kind: CreateKind) => void;
+    onbulkadd: () => void;
+    oninspect: (selection: Selection) => void;
+    onsummary: (selection: Selection) => void;
+    onfolder: (id: string | null, section: FolderSection, parentId?: string | null) => void;
+  } = $props();
   let tab = $state('world');
   let query = $state('');
-  let sort = $state('name');
+  let sort = $state('manual');
   const entities = $derived(
-    (ws.bundle?.entities ?? [])
-      .filter((e) =>
-        `${e.name} ${e.summary} ${e.description} ${e.facets.join(' ')}`
-          .toLowerCase()
-          .includes(query.toLowerCase())
-      )
-      .toSorted((a, b) =>
-        sort === 'name'
-          ? a.name.localeCompare(b.name)
-          : a.facets.join().localeCompare(b.facets.join())
-      )
+    (ws.bundle?.entities ?? []).map((e) => ({
+      id: e.id,
+      name: e.name,
+      detail: e.facets.join(' · '),
+      summary: e.summary + ' ' + e.description,
+      kind: 'entity' as const,
+      ...presentation(e.metadata, facetIcon(e.facets))
+    }))
   );
-  const units = $derived(
-    ws.bundle
-      ? narrativeOrder(ws.bundle).filter((u) =>
-          `${u.title} ${u.synopsis}`.toLowerCase().includes(query.toLowerCase())
-        )
-      : []
+  const threads = $derived(
+    (ws.bundle?.threads ?? []).map((t) => ({
+      id: t.id,
+      name: t.name,
+      detail: 'Plot thread',
+      summary: t.description,
+      kind: 'thread' as const,
+      color: t.color
+    }))
   );
-  function reorder(event: DragEvent, beforeId: string) {
-    event.preventDefault();
-    const id = event.dataTransfer?.getData('storygraph/unit');
-    const before = ws.bundle?.units.find((u) => u.id === beforeId);
-    if (id && before)
-      ws.mutate(
-        (b) => placeUnit(b, id, before.parentId, before.id),
-        'Scene reordered. Continuity checks updated.'
-      );
-  }
+  const ideas = $derived(
+    (ws.bundle?.units.filter((u) => u.unplaced || u.unresolved) ?? []).map((u) => ({
+      id: u.id,
+      name: u.title,
+      detail: u.unplaced ? 'Unplaced idea' : 'Unresolved moment',
+      summary: u.synopsis,
+      kind: 'unit' as const,
+      ...presentation(u.metadata)
+    }))
+  );
 </script>
 
 <aside class="shelf" aria-label="Entities and outline">
@@ -76,98 +83,88 @@
         onclick={() => (tab = t)}>{t === 'world' ? 'Entities' : t}</button
       >{/each}
   </div>
-  <div class="shelf-scroll">
-    {#if tab === 'world'}
-      <div class="entity-list-tools">
-        <select class="shelf-sort small" aria-label="Sort entities" bind:value={sort}
-          ><option value="name">A–Z</option><option value="facet">By facet</option></select
-        ><button class="text-button" onclick={onbulkadd}><Plus size={13} /> Bulk add</button>
-      </div>
-      {#each [{ facet: 'character', label: 'Characters', icon: UserRound }, { facet: 'location', label: 'Places', icon: MapPin }, { facet: 'item', label: 'Objects', icon: Diamond }, { facet: 'other', label: 'The rest of the world', icon: Layers }] as group (group.facet)}
-        {@const items = entities.filter((e) =>
-          group.facet === 'other'
-            ? !e.facets.some((f) => ['character', 'location', 'item'].includes(f))
-            : e.facets.includes(group.facet)
-        )}
-        <div class="shelf-group">
-          <div class="shelf-heading"><span>{group.label}</span><span>{items.length}</span></div>
-          {#each items as entity (entity.id)}<button
-              class="shelf-item"
-              class:active={ws.selection?.id === entity.id}
-              draggable="true"
-              ondragstart={(e) => e.dataTransfer?.setData('storygraph/entity', entity.id)}
-              onclick={() => ws.select({ kind: 'entity', id: entity.id })}
-              ><span class="entity-icon"><group.icon size={15} /></span><span
-                ><strong>{entity.name}</strong><small>{entity.facets.join(' · ')}</small></span
-              >{#if entity.unresolved}<CircleHelp size={13} />{/if}</button
-            >{/each}
-        </div>
-      {/each}
-      <div class="shelf-group">
-        <div class="shelf-heading">
-          <span>Plot threads</span><button
-            class="icon-button"
-            aria-label="Create plot thread"
-            onclick={() => oncreate('thread')}><Plus size={14} /></button
+  <div class="shelf-scroll" use:dragScroll>
+    {#key tab}<div class="shelf-tab-content" in:fly={{ y: 10, duration: motionDuration(260) }}>
+        {#if tab === 'world'}
+          <div class="entity-list-tools">
+            <select class="shelf-sort small" aria-label="Sort entities" bind:value={sort}
+              ><option value="manual">Your order</option><option value="name">A–Z</option><option
+                value="facet">By facet</option
+              ></select
+            ><button class="text-button" onclick={onbulkadd}><Plus size={13} /> Bulk add</button>
+          </div>
+          <div class="collection-heading">
+            <span class="eyebrow">ENTITIES</span><button
+              class="icon-button"
+              aria-label="New entity folder"
+              onclick={() => onfolder(null, 'entities')}><FolderPlus size={15} /></button
+            >
+          </div>
+          <CollectionTree
+            {ws}
+            section="entities"
+            items={entities}
+            {query}
+            {sort}
+            onmanual={() => (sort = 'manual')}
+            {oninspect}
+            {onsummary}
+            {onfolder}
+          />
+          <div class="collection-heading">
+            <span class="eyebrow">PLOT THREADS</span>
+            <div>
+              <button
+                class="icon-button"
+                aria-label="New plot thread folder"
+                onclick={() => onfolder(null, 'threads')}><FolderPlus size={14} /></button
+              ><button
+                class="icon-button"
+                aria-label="Create plot thread"
+                onclick={() => oncreate('thread')}><Plus size={14} /></button
+              >
+            </div>
+          </div>
+          <CollectionTree
+            {ws}
+            section="threads"
+            items={threads}
+            {query}
+            {oninspect}
+            {onsummary}
+            {onfolder}
+          />
+        {:else if tab === 'outline'}
+          <p class="field-help shelf-hint">
+            Drag an edge to reorder; drag the center to nest. Story time stays put.
+          </p>
+          <OutlineTree {ws} {query} {oninspect} {onsummary} />
+          <button class="text-button shelf-add" onclick={() => oncreate('unit')}
+            ><Plus size={14} /> Add a moment</button
           >
-        </div>
-        {#each ws.bundle?.threads.filter((t) => `${t.name} ${t.description}`
-            .toLowerCase()
-            .includes(query.toLowerCase())) ?? [] as t (typeof t === 'string' ? t : t.id)}<button
-            class="shelf-item"
-            onclick={() => ws.select({ kind: 'thread', id: t.id })}
-            ><i class="thread-dot" style:background={t.color}></i><span
-              ><strong>{t.name}</strong><small>Follow a storyline</small></span
-            ></button
-          >{/each}
-      </div>
-    {:else if tab === 'outline'}
-      <p class="field-help shelf-hint">Reading order. Drag a moment above another to reorder it.</p>
-      {#each units as u (u.id)}<div
-          class="outline-drop"
-          ondragover={(e) => e.preventDefault()}
-          ondrop={(e) => reorder(e, u.id)}
-          role="group"
-          aria-label={u.title}
-        >
-          <button
-            class="shelf-item outline-item"
-            style:padding-left={`${12 + (ws.bundle ? breadcrumbs(ws.bundle, u.id).length - 1 : 0) * 12}px`}
-            class:active={ws.selection?.id === u.id}
-            draggable="true"
-            ondragstart={(e) => e.dataTransfer?.setData('storygraph/unit', u.id)}
-            onclick={() => ws.navigate({ kind: 'unit', id: u.id })}
-            ><BookOpen size={14} /><span
-              ><strong>{u.title}</strong><small
-                >{u.type} {u.timeLabel ? `· ${u.timeLabel}` : ''}</small
-              ></span
-            >{#if ws.bundle?.units.some((v) => v.parentId === u.id)}<ChevronRight
-                size={13}
-              />{/if}</button
+        {:else}
+          <div class="collection-heading">
+            <span class="eyebrow">POSSIBILITIES</span><button
+              class="icon-button"
+              aria-label="New idea folder"
+              onclick={() => onfolder(null, 'ideas')}><FolderPlus size={15} /></button
+            >
+          </div>
+          <p class="field-help shelf-hint">Ideas can live here until you know where they belong.</p>
+          <CollectionTree
+            {ws}
+            section="ideas"
+            items={ideas}
+            {query}
+            {oninspect}
+            {onsummary}
+            {onfolder}
+          />
+          <button class="text-button shelf-add" onclick={() => oncreate('placeholder')}
+            ><Plus size={14} /> Capture an unknown</button
           >
-        </div>{/each}
-      <button class="text-button shelf-add" onclick={() => oncreate('unit')}
-        ><Plus size={14} /> Add a moment</button
-      >
-    {:else}
-      <p class="field-help shelf-hint">Ideas can live here until you know where they belong.</p>
-      {#each ws.bundle?.units.filter((u) => (u.unplaced || u.unresolved) && `${u.title} ${u.synopsis}`
-            .toLowerCase()
-            .includes(query.toLowerCase())) ?? [] as u (u.id)}<button
-          class="shelf-item"
-          draggable="true"
-          ondragstart={(e) => e.dataTransfer?.setData('storygraph/unit', u.id)}
-          onclick={() => ws.select({ kind: 'unit', id: u.id })}
-          ><CircleHelp size={16} /><span
-            ><strong>{u.title}</strong><small
-              >{u.unplaced ? 'Unplaced idea' : 'Unresolved moment'}</small
-            ></span
-          ></button
-        >{/each}
-      <button class="text-button shelf-add" onclick={() => oncreate('placeholder')}
-        ><Plus size={14} /> Capture an unknown</button
-      >
-    {/if}
+        {/if}
+      </div>{/key}
   </div>
   <footer class="shelf-footer">
     <span class="seed-mark">✧</span>

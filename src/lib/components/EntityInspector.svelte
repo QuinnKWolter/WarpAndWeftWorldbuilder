@@ -3,6 +3,7 @@
   import type { Entity } from '#lib/domain/model';
   import { base } from '#lib/domain/model';
   import { resolveStoryState, stateKey } from '#lib/domain/state';
+  import PresentationFields from './PresentationFields.svelte';
   let { ws, entity, onconnect }: { ws: Workspace; entity: Entity; onconnect: () => void } =
     $props();
   const snapshot = $derived(
@@ -49,6 +50,7 @@
       value={entity.summary}
       onchange={(e) => update({ summary: e.currentTarget.value })}></textarea></label
   >
+  <PresentationFields {ws} selection={{ kind: 'entity', id: entity.id }} />
   <label
     >Notes<textarea
       rows="5"

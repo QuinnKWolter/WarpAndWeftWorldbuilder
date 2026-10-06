@@ -8,6 +8,7 @@
   import { sceneDiff } from '#lib/domain/state';
   import type { CreateKind } from './CreateDialog.svelte';
   import ResolveDialog from './ResolveDialog.svelte';
+  import PresentationFields from './PresentationFields.svelte';
   let {
     ws,
     unit,
@@ -98,6 +99,7 @@
       onchange={(e) => update({ synopsis: e.currentTarget.value })}
       placeholder="What makes this moment matter?"></textarea></label
   >
+  <PresentationFields {ws} selection={{ kind: 'unit', id: unit.id }} />
   <div class="section-heading">
     <span>NARRATIVE ORDER</span>
     <div>

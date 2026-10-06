@@ -200,7 +200,7 @@ test('a writer creates a temporal story, writes, reorders, and carries it throug
   await dialog.getByLabel('Name', { exact: true }).fill('Mystery');
   await dialog.getByRole('button', { name: 'Create', exact: true }).click();
   await command(page, 'Betrayal');
-  await page.getByLabel('Mystery', { exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Mystery', exact: true }).check();
   await page.getByRole('button', { name: 'Create nested moment', exact: true }).click();
   dialog = page.getByRole('dialog');
   await dialog.getByLabel('Name', { exact: true }).fill('A whisper');
@@ -256,7 +256,7 @@ test('a writer creates a temporal story, writes, reorders, and carries it throug
   await page.getByRole('button', { name: 'Delete story', exact: true }).click();
   await expect(page.getByRole('link').filter({ hasText: 'An ordinary miracle' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Import a story' }).click();
-  await page.getByLabel('Import Storygraph file').setInputFiles(exportPath);
+  await page.getByLabel('Import worldbuilder file').setInputFiles(exportPath);
   await page.getByLabel('Story title').fill('An ordinary miracle, returned');
   await page.getByRole('button', { name: 'Import story', exact: true }).click();
   await page.waitForURL('**/project/**');

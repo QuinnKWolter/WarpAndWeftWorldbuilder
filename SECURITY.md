@@ -1,6 +1,6 @@
 # Security
 
-Storygraph is a single-user alpha. Its default local server and Docker port bind to loopback. There is no authentication or user separation. Public hosting requires access control at a reverse proxy or private network; this release is not a multi-user SaaS.
+Warp & Weft Worldbuilder is a single-user alpha. Its default local server and Docker port bind to loopback. There is no authentication or user separation. Public hosting requires access control at a reverse proxy or private network; this release is not a multi-user SaaS.
 
 Server mutations validate project shapes and references. SQLite foreign keys and transactions protect integrity. Concurrent saves use revision checks. Rich documents allow a restricted node schema and safe URL protocols. Imports accept JSON only, never archive paths or executable attachments. There is no telemetry or AI network traffic.
 

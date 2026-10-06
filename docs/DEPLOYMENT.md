@@ -4,7 +4,7 @@
 
 Run `pnpm install --frozen-lockfile`, `pnpm setup`, `pnpm build`, and `pnpm start`. Default runtime address is `127.0.0.1:3000`. Set `ORIGIN` to your exact browser origin. Set `DATABASE_PATH` for a different SQLite file. Runtime Node reads environment variables provided by the process; use `node --env-file=.env scripts/start.mjs` if you choose to maintain a local `.env`.
 
-Use the supplied launcher rather than `node build`. It sets the adapter's request origin correctly for local HTTP or the configured public origin, overwrites its internal protocol/host headers, and aligns the adapter body limit with the 20 MB application limit. SvelteKit 3 removed adapter-node's old runtime `ORIGIN` option; this launcher preserves Storygraph's simple runtime configuration.
+Use the supplied launcher rather than `node build`. It sets the adapter's request origin correctly for local HTTP or the configured public origin, overwrites its internal protocol/host headers, and aligns the adapter body limit with the 20 MB application limit. SvelteKit 3 removed adapter-node's old runtime `ORIGIN` option; this launcher preserves Warp & Weft Worldbuilder's simple runtime configuration.
 
 PowerShell example:
 
@@ -31,7 +31,7 @@ Upgrade: export valuable stories, stop the old container, back up its volume, pu
 
 For a local install, `pnpm backup` uses SQLite's online backup API and writes a consistent standalone file under `data/backups`. It includes live WAL content safely. Keep the copy outside the database directory/machine for disaster recovery.
 
-For Docker, stop the service before copying volume files. For example, after `docker compose stop`, use `docker compose cp storygraph:/app/data ./storygraph-backup` while the stopped container still exists, then `docker compose start`. Copy the entire data directory, including any WAL/SHM files. Never copy only an actively written `.db` while ignoring its WAL. A Storygraph JSON export is an additional portable project backup.
+For Docker, stop the service before copying volume files. For example, after `docker compose stop`, use `docker compose cp storygraph:/app/data ./storygraph-backup` while the stopped container still exists, then `docker compose start`. Copy the entire data directory, including any WAL/SHM files. Never copy only an actively written `.db` while ignoring its WAL. A Warp & Weft Worldbuilder JSON export is an additional portable project backup.
 
 Restore with the service stopped and preserve ownership for the `node` user. Always test restored projects before discarding the previous data.
 

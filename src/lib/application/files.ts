@@ -10,7 +10,7 @@ export function download(text: string, filename: string, type = 'application/jso
 export function exportProject(b: Bundle) {
   download(
     JSON.stringify(b, null, 2),
-    `${b.project.title.replace(/[^\p{L}\p{N} -]/gu, '').trim() || 'story'}.storygraph.json`
+    `${b.project.title.replace(/[^\p{L}\p{N} -]/gu, '').trim() || 'story'}.warp-weft.json`
   );
 }
 export async function readImport(file: File): Promise<unknown> {
@@ -18,7 +18,7 @@ export async function readImport(file: File): Promise<unknown> {
   try {
     return JSON.parse(await file.text()) as unknown;
   } catch {
-    throw new Error('This file is not valid Storygraph JSON.');
+    throw new Error('This file is not valid Warp & Weft Worldbuilder JSON.');
   }
 }
 export async function api<T>(url: string, method = 'GET', body?: unknown): Promise<T> {

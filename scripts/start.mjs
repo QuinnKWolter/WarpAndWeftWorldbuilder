@@ -18,7 +18,9 @@ const server = createServer((request, response) => {
   request.headers['x-storygraph-host'] = canonical?.host ?? request.headers.host;
   handler(request, response);
 });
-server.listen(port, host, () => console.log(`Storygraph listening on http://${host}:${port}`));
+server.listen(port, host, () =>
+  console.log(`Warp & Weft Worldbuilder listening on http://${host}:${port}`)
+);
 function stop() {
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(0), 10000).unref();
