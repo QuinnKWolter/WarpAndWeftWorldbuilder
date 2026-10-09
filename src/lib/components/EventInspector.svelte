@@ -3,6 +3,7 @@
   import { Plus, X } from '@lucide/svelte';
   import type { Workspace } from '#lib/application/workspace.svelte';
   import type { StoryEvent } from '#lib/domain/model';
+  import PresentationFields from './PresentationFields.svelte';
   import ThreadMemberships from './ThreadMemberships.svelte';
   let { ws, event }: { ws: Workspace; event: StoryEvent } = $props();
   let subject = $state(untrack(() => ws.bundle?.entities[0]?.id ?? ''));
@@ -32,6 +33,7 @@
 </script>
 
 <div class="inspector-body">
+  <PresentationFields {ws} selection={{ kind: 'event', id: event.id }} />
   <label
     >Event title<input
       value={event.title}

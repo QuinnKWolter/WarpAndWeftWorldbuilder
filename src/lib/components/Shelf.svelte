@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search, Plus, FolderPlus } from '@lucide/svelte';
+  import { Search, Plus, FolderPlus, Maximize2, Minimize2 } from '@lucide/svelte';
   import { fly } from 'svelte/transition';
   import type { Workspace } from '#lib/application/workspace.svelte';
   import type { Selection } from '#lib/domain/model';
@@ -16,11 +16,15 @@
     onbulkadd,
     oninspect,
     onsummary,
-    onfolder
+    onfolder,
+    onfocus,
+    expanded = false
   }: {
     ws: Workspace;
     oncreate: (kind: CreateKind) => void;
     onbulkadd: () => void;
+    onfocus: () => void;
+    expanded?: boolean;
     oninspect: (selection: Selection) => void;
     onsummary: (selection: Selection) => void;
     onfolder: (id: string | null, section: FolderSection, parentId?: string | null) => void;
@@ -45,7 +49,7 @@
       detail: 'Plot thread',
       summary: t.description,
       kind: 'thread' as const,
-      color: t.color
+      ...presentation(t.metadata, 'flag', t.color)
     }))
   );
   const ideas = $derived(
@@ -62,11 +66,19 @@
 
 <aside class="shelf" aria-label="Entities and outline">
   <header class="panel-header">
-    <span class="eyebrow">WORLD ENTITIES</span><button
-      class="icon-button"
-      aria-label="Create world entity"
-      onclick={() => oncreate('entity')}><Plus size={17} /></button
-    >
+    <span class="eyebrow">WORLD ENTITIES</span>
+    <div>
+      <button
+        class="icon-button"
+        aria-label={expanded ? 'Exit entities fullscreen' : 'Fullscreen entities'}
+        onclick={onfocus}
+        >{#if expanded}<Minimize2 size={16} />{:else}<Maximize2 size={16} />{/if}</button
+      ><button
+        class="icon-button"
+        aria-label="Create world entity"
+        onclick={() => oncreate('entity')}><Plus size={17} /></button
+      >
+    </div>
   </header>
   <div class="shelf-search">
     <Search size={15} /><input

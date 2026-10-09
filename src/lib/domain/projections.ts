@@ -2,6 +2,7 @@ import type { Bundle, Selection } from './model';
 import { siblings, storyOrder, narrativeOrder } from './order';
 import { resolveRelationshipState } from './state';
 import { facetIcon, presentation } from './presentation';
+import { anchors, edgeAnchors, type Anchors } from './anchors';
 import type { StoryFolder } from './organization';
 
 export const lenses = ['narrative', 'world', 'relationships', 'threads', 'chronology'] as const;
@@ -20,6 +21,7 @@ export type GraphNode = {
     detail: number;
     icon: StoryFolder['icon'];
     accent: string;
+    anchors: Anchors;
   };
 };
 export type GraphEdge = {
@@ -27,6 +29,8 @@ export type GraphEdge = {
   source: string;
   target: string;
   type: 'sequence' | 'semantic';
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
   data: {
     label: string;
     kind: 'sequence' | 'relationship' | 'link';
@@ -74,7 +78,10 @@ export function projectGraph(
         ? facetIcon(record.facets)
         : kind === 'unit'
           ? 'book'
-          : 'sparkles'
+          : kind === 'thread'
+            ? 'flag'
+            : 'sparkles',
+      record && 'color' in record ? record.color : undefined
     );
     const layout = b.layouts.find(
       (l) => l.objectId === id && l.lens === `${c.lens}:${c.parentId ?? 'root'}`
@@ -92,6 +99,7 @@ export function projectGraph(
         detail: c.detail,
         icon: style.icon,
         accent: style.color,
+        anchors: anchors(record?.metadata ?? {}),
         threads: b.threads
           .filter((t) => threadIds(id).includes(t.id))
           .map((t) => ({ name: t.name, color: t.color }))
@@ -117,7 +125,9 @@ export function projectGraph(
         u.storyTime === c.at
       )
     );
-    for (let i = 1; i < units.length; i++)
+    for (let i = 1; i < units.length; i++) {
+      const breaks = units[i - 1].metadata.sequenceBreaks;
+      if (Array.isArray(breaks) && breaks.includes(units[i].id)) continue;
       edges.push({
         id: `sequence:${units[i - 1].id}:${units[i].id}`,
         source: units[i - 1].id,
@@ -129,6 +139,7 @@ export function projectGraph(
           parentId: c.parentId
         }
       });
+    }
     if (c.lens === 'threads') {
       const related = b.relationships.filter((r) => inThread(r.id));
       const entities = b.entities.filter(
@@ -158,6 +169,7 @@ export function projectGraph(
         if (c.temporal && b.relationshipStates.some((s) => s.relationshipId === r.id) && !state)
           continue;
         edges.push({
+          ...edgeAnchors(b, r.sourceId, r.targetId, r.metadata),
           id: r.id,
           source: r.sourceId,
           target: r.targetId,
@@ -193,6 +205,7 @@ export function projectGraph(
         .map((s) => s.label);
       if (c.temporal && history.length && !state) continue;
       edges.push({
+        ...edgeAnchors(b, r.sourceId, r.targetId, r.metadata),
         id: r.id,
         source: r.sourceId,
         target: r.targetId,
@@ -207,10 +220,56 @@ export function projectGraph(
       });
     }
   }
+  const visible = new Set(nodes.map((n) => n.id));
+  for (const record of records.values()) {
+    if (
+      visible.has(record.id) ||
+      record.metadata.canvasContext !== c.lens + ':' + (c.parentId ?? 'root') ||
+      !inThread(record.id)
+    )
+      continue;
+    const kind =
+      'facets' in record
+        ? 'entity'
+        : 'parentId' in record
+          ? 'unit'
+          : 'storyTime' in record
+            ? 'event'
+            : 'thread';
+    node(
+      record.id,
+      'name' in record ? record.name : record.title,
+      kind,
+      'synopsis' in record
+        ? record.synopsis
+        : 'summary' in record
+          ? record.summary
+          : record.description,
+      kind,
+      0,
+      220
+    );
+  }
   const ids = new Set(nodes.map((n) => n.id));
+  // Cross-kind creations can add entity cards to another lens. Keep their canonical relationships visible.
+  for (const r of b.relationships) {
+    if (!ids.has(r.sourceId) || !ids.has(r.targetId) || edges.some((e) => e.id === r.id)) continue;
+    const state = resolveRelationshipState(b, r.id, c.at, c.atOrder);
+    if (c.temporal && b.relationshipStates.some((s) => s.relationshipId === r.id) && !state)
+      continue;
+    edges.push({
+      ...edgeAnchors(b, r.sourceId, r.targetId, r.metadata),
+      id: r.id,
+      source: r.sourceId,
+      target: r.targetId,
+      type: 'semantic',
+      data: { label: state?.label || r.label || r.type, kind: 'relationship', objectId: r.id }
+    });
+  }
   for (const l of b.links)
     if (ids.has(l.sourceId) && ids.has(l.targetId))
       edges.push({
+        ...edgeAnchors(b, l.sourceId, l.targetId, l.metadata),
         id: l.id,
         source: l.sourceId,
         target: l.targetId,

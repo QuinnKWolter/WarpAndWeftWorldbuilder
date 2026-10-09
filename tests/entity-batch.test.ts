@@ -34,7 +34,7 @@ describe('entity batches', () => {
   });
   it('reports original line numbers and enforces bounded, valid batches', () => {
     const result = parseEntityBatch(
-      'Valid\n\n| item\nBad | item | summary | extra\n' + 'x'.repeat(241),
+      'Valid\n\n| item\nBad | item | summary | description | extra\n' + 'x'.repeat(241),
       'character'
     );
     expect(result.rows).toHaveLength(1);

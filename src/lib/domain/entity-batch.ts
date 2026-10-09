@@ -8,7 +8,8 @@ const key = (entity: Pick<Draft, 'name' | 'facets'>) =>
 export function parseEntityBatch(
   text: string,
   defaultFacets: string,
-  existing: Bundle['entities'] = []
+  existing: Bundle['entities'] = [],
+  useDefaults = false
 ) {
   const rows: { line: number; entity: Draft }[] = [];
   const errors: string[] = [];
@@ -22,21 +23,24 @@ export function parseEntityBatch(
   const seen = new Set(existing.map(key));
   for (const { value, line } of lines) {
     const parts = value.split('|').map((part) => part.trim());
-    if (parts.length > 3) {
-      errors.push(`Line ${line}: use Name | facets | summary, with at most two separators.`);
+    if (parts.length > (useDefaults ? 3 : 4)) {
+      errors.push(
+        `Line ${line}: ${useDefaults ? 'use Name | summary | description.' : 'use Name | facets | summary | description (leave facets empty for defaults).'}`
+      );
       continue;
     }
     const result = draftSchema.safeParse({
       name: parts[0],
       facets: [
         ...new Set(
-          (parts[1] || defaultFacets)
+          (useDefaults ? defaultFacets : parts[1] || defaultFacets)
             .split(',')
             .map((facet) => facet.trim())
             .filter(Boolean)
         )
       ],
-      summary: parts[2] ?? ''
+      summary: parts[useDefaults ? 1 : 2] ?? '',
+      description: parts[useDefaults ? 2 : 3] ?? ''
     });
     if (!result.success) {
       const issue = result.error.issues[0];

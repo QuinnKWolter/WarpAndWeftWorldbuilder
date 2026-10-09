@@ -13,8 +13,9 @@ export function facetIcon(facets: string[]): (typeof folderIcons)[number] {
 }
 export function presentation(
   metadata: Record<string, Json>,
-  icon: (typeof folderIcons)[number] = 'book'
+  icon: (typeof folderIcons)[number] = 'book',
+  color = '#50856e'
 ) {
   const parsed = schema.safeParse(metadata.presentation);
-  return parsed.success ? parsed.data : { color: '#50856e', icon };
+  return parsed.success ? parsed.data : { color, icon };
 }

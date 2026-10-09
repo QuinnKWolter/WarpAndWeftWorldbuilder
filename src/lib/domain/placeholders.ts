@@ -10,6 +10,7 @@ import {
 import { breadcrumbs, siblings } from './order';
 import { organization, writeOrganization } from './organization';
 import { addMembership } from './operations';
+import { remapDocumentReferences } from './manuscript';
 
 /** Preserve the narrative envelope and its connections when an unknown becomes concrete. */
 export function resolvePlaceholder(
@@ -84,6 +85,10 @@ export function mergePlaceholder(b: Bundle, sourceId: string, targetId: string) 
       if (mention.documentId === fromDoc.id) mention.documentId = toDoc.id;
     b.documents = b.documents.filter((d) => d.id !== fromDoc.id);
   } else if (fromDoc) fromDoc.unitId = targetId;
+  for (const doc of b.documents) {
+    doc.content = remapDocumentReferences(doc.content, new Map([[sourceId, targetId]]));
+    delete doc.metadata.markdown;
+  }
   if (source.synopsis)
     target.synopsis = [target.synopsis, source.synopsis].filter(Boolean).join('\n\n');
   const archived = target.metadata.mergedNarrativeUnits;

@@ -6,7 +6,7 @@ The guiding idea: **a story is a graph whose state changes through events.** Rea
 
 ![Warp & Weft Worldbuilder workspace](static/screenshots/workspace.png)
 
-[Dark workspace](static/screenshots/workspace-dark.png) · [Phone writing view](static/screenshots/mobile-writing.png) · [Bulk entity preview](static/screenshots/bulk-entities-dark.png)
+[Manuscript editor](static/screenshots/manuscript-dark.png) · [Phone manuscript](static/screenshots/manuscript-mobile.png) · [Recolored graph](static/screenshots/graph-polish.png) · [Dark workspace](static/screenshots/workspace-dark.png) · [Phone writing view](static/screenshots/mobile-writing.png) · [Bulk entity preview](static/screenshots/bulk-entities-dark.png)
 
 [Folder styling](static/screenshots/folder-dark.png) · [Entity summary](static/screenshots/summary-dark.png) · [Phone summary](static/screenshots/summary-mobile.png)
 
@@ -14,7 +14,7 @@ The guiding idea: **a story is a graph whose state changes through events.** Rea
 
 - Create, rename, duplicate, import, and delete story projects.
 - Build world entities with multiple facets: people, places, objects, secrets, factions, and your own categories.
-- Bulk add up to 500 entities with a preview, duplicate skipping, and one-step undo.
+- Bulk add up to 500 entities with summaries and full descriptions, default-facet row formats, a preview, duplicate skipping, and one-step undo.
 - Organize entities, plot threads, and ideas in nested folders with names, colors, and icons. Drag items and folders to move or reorder them; deleting a folder keeps its contents.
 - Double-click pane items for readable summaries and connections, then edit or write. Double-click canvas moments to write or explore inside; timeline points also open summaries.
 - Nest acts, scenes, conversations, flashbacks, beats, and notes to any depth.
@@ -24,7 +24,11 @@ The guiding idea: **a story is a graph whose state changes through events.** Rea
 - Record scene participants, events, requirements, world changes, and before/after state diffs.
 - Follow overlapping threads, capture unplaced ideas, and resolve placeholders.
 - Collapse panes and folders, reorder lists, and arrange or fit the canvas with smooth animation. Choose device preference, smooth motion, or reduced motion in Settings & shortcuts.
-- Write rich prose with autosave, local recovery drafts, word counts, basic formatting, and a focused writing view.
+- Write in a connected manuscript workspace with chapters, rich text/Markdown/read modes, searchable placeholders for every object type, ordered outline population, writing notes, live graph summaries, autosave, and clean Markdown export.
+- Preview 192 categorized icons, search and favorite them, tint entire node cards, and move or multiply connection anchors without changing connection identities.
+- Delete selected graph objects or connections with Delete/Backspace and undo; release a line on empty canvas to create a connected object at that position.
+- Unfollow threads explicitly and open fullscreen graph, entities, inspector, and manuscript views.
+- Learn every system through the searchable 126-term [glossary](docs/GLOSSARY.md) and [manuscript guide](docs/MANUSCRIPT.md).
 - Search scenes, entities, events, threads, notes, and prose; use Ctrl/⌘ K to navigate or run commands.
 - Inspect deterministic continuity observations, including required knowledge/possession and possible delayed reveals.
 - Export complete projects as versioned JSON and manuscripts as Markdown. Import creates an independent copy.
@@ -40,7 +44,7 @@ Install **Node 24 LTS** and enable the pinned package manager:
 ```sh
 corepack enable
 pnpm install --frozen-lockfile
-pnpm setup
+pnpm run setup
 pnpm dev
 ```
 
@@ -99,7 +103,7 @@ Off. A typed provider boundary exists for local and generic OpenAI-compatible in
 - Single user and one installation owner. Public deployments need a private network or reverse-proxy access control.
 - Undo history is limited to 50 workspace transactions and is not retained after reload; prose has its own editor history.
 - Undo preserves newer prose. If merged writing is edited before undo, restored moments can contain overlapping passages that need manual reconciliation.
-- `@` references use an explicit entity picker and reference navigation below the editor. Inline mention autocomplete is not implemented.
+- Story placeholders use a searchable picker across moments, entities, events, relationships, and threads. Typing `@` autocomplete is not implemented.
 - Export is a single `.warp-weft.json` file. Legacy `.storygraph.json` files still import. Attachments are not implemented.
 - Temporal filtering shows modeled active relationships and property snapshots. Entity lifetimes/existence intervals are not modeled.
 - Event steps resolve changes within a story point using modeled order. Without a causing event, relationship transitions use order zero.

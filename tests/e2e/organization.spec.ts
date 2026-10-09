@@ -19,9 +19,20 @@ async function smooth(page: Page) {
 async function drag(page: Page, source: Locator, target: Locator) {
   // Start dragging before scrolling the destination into view. Both may not fit
   // simultaneously inside a compact pane.
-  await source.evaluate((element) =>
-    element.scrollIntoView({ block: 'center', behavior: 'instant' })
-  );
+  await source.evaluate(async (element) => {
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    );
+    // Scroll after enclosing slide/flip animations finish, so the drag starts from a visible box.
+    const ancestors: Element[] = [];
+    for (let node: Element | null = element; node; node = node.parentElement) ancestors.push(node);
+    await Promise.all(
+      ancestors
+        .flatMap((node) => node.getAnimations())
+        .map((animation) => animation.finished.catch(() => undefined))
+    );
+    element.scrollIntoView({ block: 'center', behavior: 'instant' });
+  });
   await source.hover();
   const start = (await source.boundingBox())!;
   await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
@@ -45,7 +56,8 @@ async function folder(page: Page, name: string, inside?: string) {
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Folder name').fill(name);
   await dialog.getByLabel('Folder color').fill('#537fa0');
-  await dialog.getByLabel('Folder icon').selectOption('map');
+  await dialog.getByLabel('Folder icon').click();
+  await dialog.getByRole('button', { name: 'Map Pin', exact: true }).click();
   await dialog.getByRole('button', { name: 'Create folder', exact: true }).click();
   await expect(dialog).toHaveCount(0);
 }
@@ -99,7 +111,8 @@ test('folders and item drags are animated, editable, nested, undoable and portab
   await expect(coast.locator('.folder-toggle')).toHaveAttribute('aria-expanded', 'false');
   await page.getByRole('button', { name: 'Edit folder Northern Coast', exact: true }).click();
   await page.getByLabel('Folder name').fill('Coastal cast');
-  await page.getByLabel('Folder icon').selectOption('moon');
+  await page.getByLabel('Folder icon').click();
+  await page.getByRole('button', { name: 'Moon', exact: true }).click();
   await page.getByRole('button', { name: 'Save folder', exact: true }).click();
   await expect(
     page.getByRole('group', { name: 'Coastal cast folder', exact: true }).locator('.folder-toggle')
@@ -183,8 +196,8 @@ test('double-click summaries, outline nesting, appearance and camera motion rema
     .filter({ hasText: 'The Quiet Harbour' })
     .dblclick();
   await page.getByRole('button', { name: 'Edit details', exact: true }).click();
-  await expect(page.getByLabel('Icon', { exact: true })).toHaveValue('map');
-  await page.getByLabel('Accent color').fill('#537fa0');
+  await expect(page.getByLabel('Icon', { exact: true })).toContainText('Map Pin');
+  await page.getByLabel('Node color').fill('#537fa0');
   await page.getByLabel('Name', { exact: true }).click();
   await expect
     .poll(
@@ -198,11 +211,15 @@ test('double-click summaries, outline nesting, appearance and camera motion rema
   ).toBeVisible();
   await expect(page.getByRole('dialog')).toContainText('Connections');
   await page.getByRole('button', { name: 'Edit details', exact: true }).click();
-  await page.getByLabel('Accent color').fill('#946db6');
-  await page.getByLabel('Icon', { exact: true }).selectOption('moon');
+  await page.getByLabel('Node color').fill('#946db6');
+  await page.getByLabel('Icon', { exact: true }).click();
+  await page.getByRole('button', { name: 'Moon', exact: true }).click();
   await page.getByLabel('Graph lens').selectOption('world');
   const mara = page.locator('.story-node').filter({ hasText: 'Mara Venn' });
-  await expect(mara).toHaveCSS('border-top-color', 'rgb(148, 109, 182)');
+  await expect(mara).toHaveCSS('--node-accent', '#946db6');
+  expect(await mara.evaluate((e) => getComputedStyle(e).backgroundColor)).not.toBe(
+    'rgb(255, 254, 250)'
+  );
   await mara.dblclick();
   await expect(page.getByRole('dialog')).toContainText('Mara Venn');
   await page.getByRole('button', { name: 'Close', exact: true }).click();

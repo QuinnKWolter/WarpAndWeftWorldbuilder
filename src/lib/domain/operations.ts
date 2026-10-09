@@ -1,4 +1,5 @@
 import { base, collections, validateBundle, type Bundle, type Selection } from './model';
+import { documentMarkdown, remapDocumentReferences } from './manuscript';
 import { cloneJson } from './clone';
 import { organization, remapOrganization, writeOrganization } from './organization';
 
@@ -43,6 +44,28 @@ export function cloneProject(input: Bundle, title = `${input.project.title} (cop
   // Settings contain organizational references, which need their own typed remap.
   copy.project.settings = cloneJson(b.project.settings);
   remapOrganization(copy, map);
+  for (const document of copy.documents) {
+    document.content = remapDocumentReferences(document.content, map);
+    delete document.metadata.markdown;
+  }
+  const remapContext = (context: string) => {
+    const separator = context.indexOf(':');
+    if (separator < 0) return context;
+    const parent = context.slice(separator + 1);
+    return context.slice(0, separator + 1) + (map.get(parent) ?? parent);
+  };
+  for (const layout of copy.layouts) layout.lens = remapContext(layout.lens);
+  for (const record of [...copy.units, ...copy.entities, ...copy.events, ...copy.threads]) {
+    const original = [...b.units, ...b.entities, ...b.events, ...b.threads].find(
+      (o) => map.get(o.id) === record.id
+    );
+    if (typeof original?.metadata.canvasContext === 'string')
+      record.metadata.canvasContext = remapContext(original.metadata.canvasContext);
+    if (Array.isArray(original?.metadata.sequenceBreaks))
+      record.metadata.sequenceBreaks = original.metadata.sequenceBreaks.map((id) =>
+        typeof id === 'string' ? (map.get(id) ?? id) : id
+      );
+  }
   copy.project.title = title;
   copy.project.revision = 0;
   copy.project.createdAt = copy.project.updatedAt = new Date().toISOString();
@@ -134,6 +157,13 @@ export function restoreKeepingProse(
 ): Bundle {
   const restored = cloneJson(target);
   const unitIds = new Set(restored.units.map((u) => u.id));
+  // Writing notes, like prose, are edited outside graph history and must survive a graph undo.
+  for (const unit of restored.units) {
+    const live = current.units.find((u) => u.id === unit.id);
+    if (!live) continue;
+    if ('writingNotes' in live.metadata) unit.metadata.writingNotes = live.metadata.writingNotes;
+    else delete unit.metadata.writingNotes;
+  }
   const currentDocuments = current.documents
     .filter((d) => unitIds.has(d.unitId))
     .map((d) => {
@@ -169,7 +199,7 @@ export function markdownExport(b: Bundle): string {
       .sort((a, c) => a.rank - c.rank)
       .map(
         (u) =>
-          `${'#'.repeat(Math.min(level, 6))} ${u.title}\n\n${b.documents.find((d) => d.unitId === u.id)?.text || u.synopsis}\n\n${walk(u.id, level + 1)}`
+          `${'#'.repeat(Math.min(level, 6))} ${u.title}\n\n${b.documents.find((d) => d.unitId === u.id) ? documentMarkdown(b.documents.find((d) => d.unitId === u.id)!.content) : u.synopsis}\n\n${walk(u.id, level + 1)}`
       )
       .join('');
   return `# ${b.project.title}\n\n${b.project.description}\n\n${walk(null, 2)}`;

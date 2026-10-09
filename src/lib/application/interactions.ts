@@ -45,12 +45,17 @@ export function dragScroll(node: HTMLElement) {
 }
 
 /** A details menu closes after choosing an action, clicking away or pressing Escape. */
-export function dismissMenu(node: HTMLDetailsElement) {
+export function dismissMenu(node: HTMLDetailsElement, options: { closeOnAction?: boolean } = {}) {
   function outside(event: PointerEvent) {
     if (event.target instanceof Node && !node.contains(event.target)) node.open = false;
   }
   function choose(event: MouseEvent) {
-    if (event.target instanceof Element && event.target.closest('button,a')) node.open = false;
+    if (
+      options.closeOnAction !== false &&
+      event.target instanceof Element &&
+      event.target.closest('button,a')
+    )
+      node.open = false;
   }
   function escape(event: KeyboardEvent) {
     if (event.key === 'Escape' && node.open) {
@@ -67,6 +72,61 @@ export function dismissMenu(node: HTMLDetailsElement) {
       document.removeEventListener('pointerdown', outside);
       node.removeEventListener('click', choose);
       node.removeEventListener('keydown', escape);
+    }
+  };
+}
+
+/** Keep fullscreen keyboard focus inside the active surface, then restore it. */
+export function focusScope(node: HTMLElement, active: boolean) {
+  let previous: HTMLElement | null = null;
+  let enabled = false;
+  const focusables = () =>
+    Array.from(
+      node.querySelectorAll<HTMLElement>(
+        'button:not(:disabled),a[href],input:not(:disabled),textarea,select,summary,[tabindex="0"],[contenteditable="true"]'
+      )
+    ).filter((e) => e.getClientRects().length && !e.closest('[inert],dialog:not([open])'));
+  function update(next: boolean) {
+    if (next && !enabled) {
+      previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      enabled = true;
+      requestAnimationFrame(() => {
+        if (enabled)
+          (node.querySelector<HTMLElement>('[aria-label^="Exit "]') ?? focusables()[0])?.focus();
+      });
+    } else if (!next && enabled) {
+      enabled = false;
+      requestAnimationFrame(() => {
+        if (previous?.isConnected && !previous.closest('[inert]')) previous.focus();
+      });
+    }
+  }
+  function keydown(event: KeyboardEvent) {
+    if (
+      !enabled ||
+      event.key !== 'Tab' ||
+      (event.target instanceof Element && event.target.closest('dialog[open]'))
+    )
+      return;
+    const items = focusables();
+    const first = items[0],
+      last = items.at(-1);
+    if (!first) return;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+  node.addEventListener('keydown', keydown);
+  update(active);
+  return {
+    update,
+    destroy() {
+      node.removeEventListener('keydown', keydown);
+      if (enabled && previous?.isConnected) previous.focus();
     }
   };
 }

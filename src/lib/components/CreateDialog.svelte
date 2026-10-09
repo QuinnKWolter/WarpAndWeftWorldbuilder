@@ -24,7 +24,10 @@
     sourceId = '',
     targetId = '',
     unitId = null,
-    presetType = 'scene'
+    presetType = 'scene',
+    placement,
+    connectionFrom,
+    connectionAnchors
   }: {
     ws: Workspace;
     kind: CreateKind;
@@ -34,6 +37,9 @@
     targetId?: string;
     unitId?: string | null;
     presetType?: string;
+    placement?: { x: number; y: number };
+    connectionFrom?: { nodeId: string; handleId: string | null; type: 'source' | 'target' };
+    connectionAnchors?: { sourceHandle: string | null; targetHandle: string | null };
   } = $props();
   let title = $state('');
   let summary = $state('');
@@ -70,7 +76,11 @@
     try {
       ws.mutate(
         (b) => {
-          const core = { ...base(), id };
+          const core = {
+            ...base(),
+            id,
+            metadata: placement ? { canvasContext: ws.lens + ':' + (ws.parentId ?? 'root') } : {}
+          };
           if (kind === 'entity')
             b.entities.push(
               entitySchema.parse({
@@ -122,7 +132,10 @@
                 label: title,
                 description: summary,
                 type: type === 'scene' ? 'relationship' : type,
-                directed
+                directed,
+                metadata: {
+                  connection: connectionAnchors ?? { sourceHandle: null, targetHandle: null }
+                }
               })
             );
           if (kind === 'state')
@@ -162,6 +175,41 @@
             b.threads.push(
               threadSchema.parse({ ...core, name: title, description: summary, color })
             );
+          if (placement)
+            b.layouts.push({
+              ...base(),
+              objectId: id,
+              lens: ws.lens + ':' + (ws.parentId ?? 'root'),
+              ...placement
+            });
+          if (connectionFrom) {
+            const from = connectionFrom.type === 'source';
+            const sourceId = from ? connectionFrom.nodeId : id;
+            const targetId = from ? id : connectionFrom.nodeId;
+            const metadata = {
+              connection: {
+                sourceHandle: from ? connectionFrom.handleId : null,
+                targetHandle: from ? null : connectionFrom.handleId
+              }
+            };
+            if (
+              b.entities.some((e) => e.id === sourceId) &&
+              b.entities.some((e) => e.id === targetId)
+            )
+              b.relationships.push(
+                relationshipSchema.parse({
+                  ...base(),
+                  sourceId,
+                  targetId,
+                  label: 'connected',
+                  metadata
+                })
+              );
+            else b.links.push({ ...base(), sourceId, targetId, type: 'enables', metadata });
+            for (const threadId of ws.threadIds)
+              if (!b.threadMemberships.some((m) => m.threadId === threadId && m.objectId === id))
+                b.threadMemberships.push({ ...base(), threadId, objectId: id });
+          }
           if (kind === 'thread') {
             for (const objectId of [sourceId, targetId].filter(Boolean))
               b.threadMemberships.push({ ...base(), threadId: id, objectId });

@@ -11,7 +11,9 @@
     oncreate,
     onbulkadd,
     onissues,
-    onfit
+    onfit,
+    onmanuscript,
+    onglossary
   }: {
     ws: Workspace;
     onclose: () => void;
@@ -19,6 +21,8 @@
     onbulkadd: () => void;
     onissues: () => void;
     onfit: () => void;
+    onmanuscript: () => void;
+    onglossary: () => void;
   } = $props();
   let query = $state('');
   const commands = $derived(
@@ -35,6 +39,9 @@
         type: 'Lens',
         run: () => (ws.lens = lens)
       })),
+      { title: 'Open manuscript editor', type: 'Writing', run: onmanuscript },
+      { title: 'Open glossary of terms', type: 'Help', run: onglossary },
+      { title: 'Unfollow all threads', type: 'View', run: () => (ws.threadIds = []) },
       { title: 'Bulk add entities', type: 'Command', run: onbulkadd },
       {
         title: 'Toggle temporal / whole story',

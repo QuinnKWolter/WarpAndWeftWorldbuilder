@@ -1,7 +1,7 @@
 <script lang="ts">
   import { flip } from 'svelte/animate';
   import { slide } from 'svelte/transition';
-  import { ChevronRight, Plus, Pencil, GripVertical, Info, Layers } from '@lucide/svelte';
+  import { ChevronRight, Plus, Pencil, GripVertical, Info } from '@lucide/svelte';
   import FolderIcon from './FolderIcon.svelte';
   import type { Workspace } from '#lib/application/workspace.svelte';
   import type { Selection } from '#lib/domain/model';
@@ -210,7 +210,6 @@
       {#if !folder.collapsed || query}<div
           class="folder-contents"
           transition:slide={{ duration: motionDuration(320) }}
-          inert={folder.collapsed && !query}
         >
           {@render tree(folder.id)}{#if !members(folder.id).length && !folders(folder.id).length}<p
               class="folder-empty"
@@ -263,10 +262,10 @@
           >{#if item.kind === 'unit'}<FolderIcon
               name={item.icon ?? 'book'}
               size={14}
-            />{:else if item.kind === 'thread'}<Layers size={14} />{:else}<FolderIcon
-              name={item.icon ?? 'users'}
+            />{:else if item.kind === 'thread'}<FolderIcon
+              name={item.icon ?? 'flag'}
               size={14}
-            />{/if}</span
+            />{:else}<FolderIcon name={item.icon ?? 'users'} size={14} />{/if}</span
         ><span><strong>{item.name}</strong><small>{item.detail}</small></span>
       </button><button
         class="item-summary icon-button"

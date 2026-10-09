@@ -45,10 +45,33 @@ Verification: ESLint/Prettier, zero-error/zero-warning Svelte checks, 31 passing
 
 Exports now use `.warp-weft.json`; the v1 format identifier, legacy imports, existing database path, and recovery/theme storage keys remain compatible. No database migration is required. Native pane dragging targets mouse/trackpad use; keyboard reordering and summary/inspector placement controls provide alternatives on touch devices.
 
+## Connected manuscript and graph controls — 2026-10-09
+
+This follow-up delivers full-card color in both themes, a 192-icon searchable/category/favorites library, immediate keyboard node/edge deletion with undo, explicit thread unfollow, empty-canvas connection creation, configurable incoming/outgoing anchor sides and counts, and focus views for graph, both drawers and manuscript. Bulk descriptions work with explicit or default-only facets. The manuscript shares narrative identity and documents: chapters/scenes, rich text/Markdown/read modes, formatting, find/replace, all five reference kinds, ordered outline population, expansion/hiding, optional notes, live graph summaries, and clean Markdown export. A searchable 126-term glossary explains the systems.
+
+Final verification in the Windows Node 24.21.0 / pnpm 12.9.1 workspace:
+
+| Check                       | Result                                                                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Svelte/TypeScript           | Zero errors and zero warnings.                                                                                                  |
+| ESLint/Prettier             | Passed.                                                                                                                         |
+| Domain/SQLite suite         | 40 passing tests in five files.                                                                                                 |
+| Production build            | Passed with adapter-node output.                                                                                                |
+| Production Chromium suite   | All 11 workflows passed in one full run, using the built Node launcher and an isolated database.                                |
+| Production visual review    | Light/dark manuscript, 390px writing, and recolored graph; no browser errors or horizontal overflow.                            |
+| Production dependency audit | Zero reported vulnerabilities at verification time.                                                                             |
+| Repository hygiene          | Data, temporary QA scripts, browser reports and builds remain ignored; only source, docs and reviewed screenshots are included. |
+
+Development workflows were also exercised through full and focused runs while implementing the changes. Regression checks caught and corrected proxy-safe deletion paths, selection rebuilding edge labels between clicks, stale phone writing focus, blank text-style selection, and transition/focus interaction during folder reopening. Browser drag checks wait for enclosing animation and scrolling geometry to settle while retaining real pointer dragging and motion sampling.
+
+References and creation-view/layout contexts remap on import/duplication; possibility merges retarget their manuscript references. Prose and writing notes survive unrelated graph undo. Removing extra anchors routes their connections to the first anchor. Existing projects require no database migration. Older builds cannot import the new inline reference node. Fullscreen means the application window; supported Markdown and export limits are documented in [MANUSCRIPT.md](MANUSCRIPT.md).
+
+Screenshots: [light manuscript](../static/screenshots/manuscript-light.png), [dark manuscript](../static/screenshots/manuscript-dark.png), [phone manuscript](../static/screenshots/manuscript-mobile.png), and [recolored graph](../static/screenshots/graph-polish.png). Docker build/restart checks from the original alpha were not repeated for this follow-up; no public deployment or new remote CI result is claimed here.
+
 ## Practical limits
 
 Read the [README limitations](../README.md#known-limitations), [scope map](REQUIREMENTS.md), and [roadmap](ROADMAP.md). There is no authentication, real-time collaboration, AI request execution, attachment storage, or inline mention autocomplete. Public access needs external access control. Spatial graph accessibility and large-project browser benchmarking remain incomplete; no WCAG certification or comprehensive performance certification is claimed.
 
-The production build reports a large ELK chunk (about 1.43 MB raw / 442 KB gzip). ELK loads only when Arrange is invoked. The prose editor also loads on opening writing. The workspace route chunk is about 308 KB raw / 96 KB gzip, with shared framework and graph chunks in addition. The bundle warning is retained rather than hidden by increasing the warning threshold.
+The production build reports a large ELK chunk (about 1.43 MB raw / 442 KB gzip). ELK loads only when Arrange is invoked. The manuscript/editor chunk loads on opening writing (about 463 KB raw / 146 KB gzip). The current workspace route chunk is about 404 KB raw / 121 KB gzip, with shared framework and graph chunks in addition. The bundle warning is retained rather than hidden by increasing the warning threshold.
 
-GitHub Actions is configured, but a remote CI run has not been performed because this task did not publish a repository. Docker checks verify the application build/runtime; they are not a certification of the container base image's entire operating-system supply chain.
+GitHub Actions is configured, but a remote CI run has not been performed as part of this follow-up. Docker checks verify the application build/runtime; they are not a certification of the container base image's entire operating-system supply chain.

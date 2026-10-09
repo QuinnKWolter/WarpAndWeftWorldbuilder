@@ -173,7 +173,6 @@
       {#if nested && (!collapsed.includes(unit.id) || query)}<div
           class="outline-children"
           transition:slide={{ duration: motionDuration(320) }}
-          inert={collapsed.includes(unit.id) && !query}
         >
           {@render tree(unit.id)}
         </div>{/if}

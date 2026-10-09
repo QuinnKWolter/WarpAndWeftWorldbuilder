@@ -2,9 +2,9 @@
   import { untrack } from 'svelte';
   import Modal from './Modal.svelte';
   import FolderIcon from './FolderIcon.svelte';
+  import IconPicker from './IconPicker.svelte';
   import {
     folderSchema,
-    folderIcons,
     organization,
     writeOrganization,
     removeFolder,
@@ -88,11 +88,11 @@
       /></label
     >
     <div class="form-row">
-      <label>Folder color<input type="color" bind:value={color} /></label><label
-        >Folder icon<select bind:value={icon}
-          >{#each folderIcons as value (value)}<option>{value}</option>{/each}</select
-        ></label
-      >
+      <label>Folder color<input type="color" bind:value={color} /></label><IconPicker
+        label="Folder icon"
+        value={icon}
+        onchange={(value) => (icon = value)}
+      />
     </div>
     <label
       >Parent folder<select bind:value={parent}

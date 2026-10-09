@@ -7,9 +7,13 @@
   let text = $state('');
   let facets = $state('character');
   let error = $state('');
-  const example =
-    'Mira Vale\nThe Starwell | location | A spring that remembers\nSilver Compass | item | Always points home';
-  const preview = $derived(parseEntityBatch(text, facets, ws.bundle?.entities));
+  let useDefaults = $state(false);
+  const example = $derived(
+    useDefaults
+      ? 'Mira Vale | A navigator | She charts the forgotten coast\nElian Rook | A keeper | He watches the Archive'
+      : 'Mira Vale\nThe Starwell | location | A spring that remembers | Its water holds old voices\nSilver Compass | item | Always points home'
+  );
+  const preview = $derived(parseEntityBatch(text, facets, ws.bundle?.entities, useDefaults));
   function save() {
     if (!preview.rows.length || preview.errors.length) return;
     const batch = preview.rows.map(({ entity }) => ({ ...base(), ...entity }));
@@ -42,18 +46,26 @@
         maxlength="1000"
       /></label
     >
+    <label class="checkbox-row"
+      ><input type="checkbox" bind:checked={useDefaults} /> Use default facets for every row</label
+    >
     <label
       >Entities <textarea
         class="batch-input"
+        aria-describedby="bulk-format-help"
         bind:value={text}
         rows="7"
         maxlength="200000"
         spellcheck="false"
         placeholder={example}></textarea></label
     >
-    <p class="field-help">
-      Format: <code>Name | facets, separated by commas | summary</code>. Names with the same facets
-      are skipped if already listed or in your world.
+    <p class="field-help" id="bulk-format-help">
+      {#if useDefaults}Format: <code>Name | summary | description</code>. Every row uses the default
+        facets above.{:else}Format: <code
+          >Name | facets, separated by commas | summary | description</code
+        >. Leave the facets column empty to use defaults, for example
+        <code>Mira | | A navigator | Her longer description</code>.{/if} Descriptions and summaries are
+      optional. Names with the same facets are skipped if already listed or in your world.
     </p>
     {#if preview.errors.length}<div class="batch-errors" role="alert">
         {#each preview.errors as message (message)}<p>{message}</p>{/each}
@@ -71,7 +83,10 @@
                   >{row.entity.facets.join(' · ') || 'No facets'}</span
                 >
               </div>
-              {#if row.entity.summary}<p>{row.entity.summary}</p>{/if}
+              {#if row.entity.summary}<p>{row.entity.summary}</p>{/if}{#if row.entity.description}<p
+                >
+                  {row.entity.description}
+                </p>{/if}
             </li>{/each}
         </ul>{:else}<p class="field-help">Your new entities will appear here.</p>{/if}
     </section>

@@ -63,3 +63,13 @@ Context: adapter-node 6 defaults to HTTPS and removed its runtime `ORIGIN` optio
 Decision: supply a small Node launcher around the official handler. It derives local HTTP or the explicitly configured runtime origin, overwrites private protocol/host headers, and sets the adapter body limit to 20 MB. Docker uses the same launcher.
 
 Consequences: local and proxied deployments can change origin without rebuilding, while application and framework CSRF checks see the same origin. TLS terminates at the configured trusted proxy; arbitrary client-provided forwarding headers are not used.
+
+## Connected manuscript and stable anchor identities
+
+Decision: use the existing narrative units and documents as chapters/scenes and writing, with a lazy-loaded Tiptap Markdown editor. Inline story-reference atoms carry an object UUID, kind and fallback label for all five object types. Their durable Markdown tokens use Tiptap's [custom tokenizer and render/parse hooks](https://tiptap.dev/docs/editor/markdown/advanced-usage/custom-tokenizer). Clean manuscript export omits planning references and notes; complete JSON preserves them and remaps reference IDs on copy/import.
+
+Consequences: graph and manuscript share identity and autosave. References survive object deletion with readable labels. Expanding references is an undoable explicit change; later prose and writing notes survive unrelated graph undo. Markdown supports the installed schema, rather than arbitrary HTML or unsupported publication features.
+
+Decision: retain the original unnamed source/target handles, give extra anchors stable direction/number IDs, and persist chosen anchors on canonical connections. Moving sides keeps IDs, and reducing count routes missing extra anchors back to the original point. Empty-canvas connection creation atomically adds the object, its layout, and its connection. Selecting a line does not open a blocking dialog; Delete removes it immediately with undo. Removing a derived sequence line records a break without changing reading order.
+
+Consequences: existing projects and connections remain usable without a database migration. Presentation, writing notes, and anchor configuration stay in validated JSON/metadata; icon favorites remain browser-local preferences.

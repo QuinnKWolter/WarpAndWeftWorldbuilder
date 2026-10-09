@@ -7,6 +7,7 @@ import { cloneJson as clone } from '../domain/clone';
 export class Workspace {
   bundle = $state<Bundle>();
   selection = $state<Selection | null>(null);
+  edgeSelection = $state<string | null>(null);
   lens = $state<Lens>('narrative');
   parentId = $state<string | null>(null);
   at = $state(1);
@@ -103,6 +104,7 @@ export class Workspace {
       this.historyVersion++;
     }
     this.bundle = next;
+    this.threadIds = this.threadIds.filter((id) => next.threads.some((t) => t.id === id));
     this.message = description;
     this.changed();
   }
@@ -205,6 +207,7 @@ export class Workspace {
     }, 'Canvas position saved');
   }
   select(selection: Selection) {
+    this.edgeSelection = null;
     this.selection = selection;
     if (selection.kind === 'unit') {
       const u = this.bundle?.units.find((u) => u.id === selection.id);

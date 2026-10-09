@@ -30,12 +30,20 @@
     onwrite,
     onsummary,
     oninspect,
+    onconnectempty,
     fitRequest = 0
   }: {
     ws: Workspace;
     oncreate: () => void;
     onconnect: (c: Connection) => void;
     onedge: (edge: Edge) => void;
+    onconnectempty: (start: {
+      nodeId: string;
+      handleId: string | null;
+      type: 'source' | 'target';
+      x: number;
+      y: number;
+    }) => void;
     onwrite: () => void;
     onsummary: (selection: Selection) => void;
     oninspect: (selection: Selection) => void;
@@ -46,6 +54,7 @@
   const nodeTypes = { story: StoryNode };
   const edgeTypes = { sequence: SequenceEdge, semantic: SemanticEdge };
   let previousProjection = '';
+  let toFlow: ((point: { x: number; y: number }) => { x: number; y: number }) | undefined;
   let dragging = $state(false);
   let frame = 0;
   let targets = $state.raw<GraphNode[]>([]);
@@ -83,7 +92,7 @@
   }
   $effect(() => {
     const graph = ws.graph;
-    const fingerprint = JSON.stringify([graph, ws.selection]);
+    const fingerprint = JSON.stringify(graph);
     if (fingerprint === previousProjection) return;
     previousProjection = fingerprint;
     targets = graph.nodes;
@@ -97,8 +106,34 @@
       ...e,
       type: e.type,
       label: e.type === 'semantic' ? e.data.label : undefined,
-      style: 'stroke: var(--edge); stroke-width: 1.4;'
+      selected: ws.edgeSelection === e.id || ws.selection?.id === e.id,
+      style:
+        ws.edgeSelection === e.id || ws.selection?.id === e.id
+          ? 'stroke: var(--accent); stroke-width: 3;'
+          : 'stroke: var(--edge); stroke-width: 1.4;'
     }));
+  });
+  $effect(() => {
+    const selectedId = ws.selection?.id;
+    const selectedEdge = ws.edgeSelection;
+    // Selecting must preserve card data/measurements so labels stay under the pointer.
+    untrack(() => {
+      nodes = nodes.map((n) =>
+        n.selected === (n.id === selectedId) ? n : { ...n, selected: n.id === selectedId }
+      );
+      edges = edges.map((e) => {
+        const selected = e.id === selectedEdge || e.id === selectedId;
+        return e.selected === selected
+          ? e
+          : {
+              ...e,
+              selected,
+              style: selected
+                ? 'stroke: var(--accent); stroke-width: 3;'
+                : 'stroke: var(--edge); stroke-width: 1.4;'
+            };
+      });
+    });
   });
   function drop(event: DragEvent) {
     event.preventDefault();
@@ -180,14 +215,44 @@
             else onsummary({ kind: node.data.kind, id: node.id });
           }
         }}
-        onedgeclick={({ edge }) => onedge(edge)}
+        onedgeclick={({ edge, event }) => {
+          ws.selection = null;
+          ws.edgeSelection = edge.id;
+          if (
+            edge.data?.kind === 'relationship' ||
+            (event instanceof MouseEvent && event.detail === 2)
+          )
+            onedge(edge);
+        }}
         {onconnect}
-        onpaneclick={() => (ws.selection = null)}
+        onconnectend={(event, state) => {
+          if (state.isValid || !state.fromHandle || state.toNode || !toFlow) return;
+          const target = event.target;
+          if (!(target instanceof Element) || !target.closest('.svelte-flow')) return;
+          const pointer = 'changedTouches' in event ? event.changedTouches[0] : event;
+          if (!pointer) return;
+          const point = toFlow({ x: pointer.clientX, y: pointer.clientY });
+          onconnectempty({
+            nodeId: state.fromHandle.nodeId,
+            handleId: state.fromHandle.id ?? null,
+            type: state.fromHandle.type,
+            ...point
+          });
+        }}
+        onpaneclick={() => {
+          ws.selection = null;
+          ws.edgeSelection = null;
+        }}
         onmoveend={(_event, viewport) => {
           ws.detail = viewport.zoom < 0.55 ? 1 : 2;
         }}
       >
-        <CanvasMotion request={fitRequest} context={`${ws.lens}:${ws.parentId}`} {targets} />
+        <CanvasMotion
+          onready={(convert) => (toFlow = convert)}
+          request={fitRequest}
+          context={`${ws.lens}:${ws.parentId}`}
+          {targets}
+        />
         <Background gap={24} size={1} patternColor="var(--dot)" />
         <Controls showLock={false} fitViewOptions={{ duration: motionDuration(520) }} />
         <MiniMap pannable zoomable nodeColor="var(--accent-soft)" maskColor="transparent" />

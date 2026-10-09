@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Tint complete node cards, text and icons in light/dark themes; add 192 categorized previewable icons with search and browser-local favorites.
+- Delete selected graph nodes and relationships/semantic/sequence connections immediately with keyboard Delete/Backspace and undo. Retain inspector impact previews and preserve reading order when deleting automatic lines.
+- Add explicit thread unfollow actions and visible followed-thread filters.
+- Create connected objects where a dragged connection is released on empty canvas; preserve anchor identities and layouts.
+- Configure incoming/outgoing anchor sides and up to four anchors per direction, falling back safely when extra anchors are removed.
+- Add full-window entities, inspector, graph, and manuscript focus views with Escape and keyboard focus handling.
+- Support bulk summaries/descriptions with blank/default facet columns and a simpler default-only format, with explanatory help.
+- Add a connected chapter/scene manuscript workspace with rich text, Markdown, read mode, formatting, find/replace, searchable placeholders for every story-object type, ordered outline population, optional notes, live graph summaries, and clean export.
+- Preserve inline reference identities through save, import/duplication, deletion and undo. Existing project storage requires no schema migration; older builds cannot import the new reference node.
+- Add a searchable 126-term glossary and manuscript workflow documentation.
+
 - Name the app **Warp & Weft Worldbuilder**, with woven branding and `.warp-weft.json` exports. Preserve legacy imports and existing storage paths.
 - Add persistent nested folders for entities, ideas, and plot threads, with editable names, colors, icons, and collapse state. Drag folders/items to move or reorder, with drop markers and pane edge scrolling; remove folders while retaining contents.
 - Add drag-to-nest outline organization, persisted container collapse, search expansion, Alt+↑/↓ reordering, and Alt+Enter summaries. Narrative reordering preserves story chronology.

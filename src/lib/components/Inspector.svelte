@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { X, Trash2 } from '@lucide/svelte';
+  import { X, Trash2, Maximize2, Minimize2 } from '@lucide/svelte';
   import { fly } from 'svelte/transition';
   import { motionDuration } from '#lib/application/motion';
   import type { Workspace } from '#lib/application/workspace.svelte';
@@ -8,19 +8,24 @@
   import EntityInspector from './EntityInspector.svelte';
   import RelationshipInspector from './RelationshipInspector.svelte';
   import EventInspector from './EventInspector.svelte';
+  import PresentationFields from './PresentationFields.svelte';
   import { objectName, objectSelection } from '#lib/domain/objects';
   let {
     ws,
     oncreate,
     onwrite,
     ondelete,
-    onclose
+    onclose,
+    onfocus,
+    expanded = false
   }: {
     ws: Workspace;
     oncreate: (kind: CreateKind, unitId?: string) => void;
     onwrite: () => void;
     ondelete: () => void;
     onclose: () => void;
+    onfocus: () => void;
+    expanded?: boolean;
   } = $props();
   const unit = $derived(
     ws.bundle?.units.find((u) => ws.selection?.kind === 'unit' && u.id === ws.selection.id)
@@ -45,6 +50,12 @@
   <header class="panel-header">
     <span class="eyebrow">{ws.selection?.kind ?? 'INSPECTOR'}</span>
     <div>
+      <button
+        class="icon-button"
+        aria-label={expanded ? 'Exit inspector fullscreen' : 'Fullscreen inspector'}
+        onclick={onfocus}
+        >{#if expanded}<Minimize2 size={16} />{:else}<Maximize2 size={16} />{/if}</button
+      >
       {#if ws.selection}<button
           class="icon-button"
           aria-label="Delete selected object"
@@ -86,22 +97,17 @@
                   const t = b.threads.find((t) => t.id === thread.id);
                   if (t) t.description = e.currentTarget.value;
                 })}></textarea></label
-          ><label
-            >Color<input
-              type="color"
-              value={thread.color}
-              onchange={(e) =>
-                ws.mutate((b) => {
-                  const t = b.threads.find((t) => t.id === thread.id);
-                  if (t) t.color = e.currentTarget.value;
-                })}
-            /></label
-          ><button
+          ><PresentationFields {ws} selection={{ kind: 'thread', id: thread.id }} /><button
             class="primary full"
             onclick={() => {
               ws.lens = 'threads';
-              ws.threadIds = [thread.id];
-            }}>Follow this thread</button
+              ws.threadIds = ws.threadIds.includes(thread.id)
+                ? ws.threadIds.filter((id) => id !== thread.id)
+                : [...ws.threadIds, thread.id];
+            }}
+            >{ws.threadIds.includes(thread.id)
+              ? 'Unfollow this thread'
+              : 'Follow this thread'}</button
           >
           <div class="section-heading"><span>ON THIS THREAD</span></div>
           {#each ws.bundle?.threadMemberships.filter((m) => m.threadId === thread.id) ?? [] as m (m.id)}<button

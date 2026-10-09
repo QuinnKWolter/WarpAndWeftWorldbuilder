@@ -26,7 +26,7 @@ async function saved(page: Page) {
   await expect(page.getByRole('status')).toHaveText('All changes saved');
 }
 
-test('deleting a selected moment previews safely, preserves undo and persists the deletion', async ({
+test('Delete removes a selected moment immediately, preserves undo and persists deletion', async ({
   page
 }) => {
   const errors: string[] = [];
@@ -43,11 +43,7 @@ test('deleting a selected moment previews safely, preserves undo and persists th
   await page.getByRole('button', { name: 'Close writing workspace' }).click();
   await page.locator('.story-node').filter({ hasText: 'Second moment' }).click();
   await page.keyboard.press('Delete');
-  const dialog = page.getByRole('dialog');
-  await expect(dialog).toContainText('Delete Second moment?');
-  await expect(dialog).toContainText('related records');
-  await dialog.getByRole('button', { name: 'Delete & keep undo', exact: true }).click();
-  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('.story-node')).toHaveCount(1);
   await page.getByRole('button', { name: 'Undo story change' }).click();
   await expect(page.locator('.story-node')).toHaveCount(2);
@@ -233,8 +229,9 @@ test('a writer creates a temporal story, writes, reorders, and carries it throug
   await expect(page.getByRole('textbox', { name: 'Scene prose', exact: true })).toContainText(
     'a door remembered her'
   );
+  await page.getByRole('button', { name: 'Close writing workspace' }).click();
   await page.getByLabel('Graph lens').selectOption('threads');
-  await expect(page.getByRole('button', { name: 'Mystery', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Follow Mystery', exact: true })).toBeVisible();
   await page.locator('.workspace-status button').click();
   await expect(page.getByRole('dialog')).toContainText('continuity check');
   await page.getByRole('button', { name: 'Close dialog' }).click();
@@ -344,12 +341,15 @@ test('semantic links, event steps and placeholder merges remain editable and und
   await page.getByRole('button', { name: 'Explore the demo' }).click();
   await page.waitForURL('**/project/**');
   await command(page, 'A door without a room');
-  await page.getByRole('button', { name: 'Inspect connection: causes', exact: true }).click();
+  await page.getByRole('button', { name: 'Inspect connection: causes', exact: true }).dblclick();
   let dialog = page.getByRole('dialog');
   await dialog.getByLabel('Semantic link', { exact: true }).selectOption('reveals');
   await dialog.getByRole('button', { name: 'Save connection', exact: true }).click();
-  await page.getByRole('button', { name: 'Inspect connection: reveals', exact: true }).click();
-  await page.getByRole('button', { name: 'Delete connection', exact: true }).click();
+  await page.getByRole('button', { name: 'Inspect connection: reveals', exact: true }).dblclick();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Delete connection', exact: true })
+    .click();
   await expect(
     page.getByRole('button', { name: 'Inspect connection: reveals', exact: true })
   ).toHaveCount(0);

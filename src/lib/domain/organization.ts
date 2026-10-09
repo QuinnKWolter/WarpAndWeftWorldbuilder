@@ -1,18 +1,8 @@
 import { z } from 'zod';
 import type { Bundle, Json } from './model';
 
-export const folderIcons = [
-  'folder',
-  'sparkles',
-  'users',
-  'map',
-  'gem',
-  'book',
-  'flag',
-  'moon',
-  'leaf',
-  'key'
-] as const;
+export { iconIds as folderIcons } from './icons';
+import { iconIds as folderIcons } from './icons';
 export const folderSections = ['entities', 'ideas', 'threads'] as const;
 export type FolderSection = (typeof folderSections)[number];
 export const folderSchema = z.object({

@@ -305,7 +305,8 @@ const documentNode = z.object({
     'blockquote',
     'codeBlock',
     'hardBreak',
-    'horizontalRule'
+    'horizontalRule',
+    'storyReference'
   ]),
   text: z.string().optional(),
   attrs: z.record(z.string(), z.json()).optional(),
@@ -327,6 +328,13 @@ function validateDocument(content: Json, depth = 0): void {
       if (typeof href !== 'string' || !/^(https?:\/\/|mailto:|#)/i.test(href))
         throw new Error('Document link uses an unsupported URL.');
     }
+  if (node.type === 'storyReference') {
+    z.object({
+      objectId: z.uuid(),
+      kind: z.enum(['entity', 'unit', 'event', 'relationship', 'thread']),
+      label: z.string().max(240)
+    }).parse(node.attrs);
+  }
   const children = (content as Record<string, Json>).content;
   if (children !== undefined) {
     if (!Array.isArray(children)) throw new Error('Invalid document children.');
